@@ -70,7 +70,7 @@ async function fetchData() {
             throw new Error("Invalid nation");
         }
 
-        const nationApiResponse = await fetch("https://www.nationstates.net/cgi-bin/api.cgi?nation=testlandia&q=name+notable+gdp+population+flag+category+motto+demonym+type", {
+        const nationApiResponse = await fetch("https://www.nationstates.net/cgi-bin/api.cgi?nation=${input.value}&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region", {
           headers: {
             "User-Agent": `CardPreview by Kractero usedBy ${nation}`,
           },
