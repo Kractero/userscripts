@@ -59,7 +59,7 @@ async function fetchData() {
         let nation = document.querySelector('#loggedin')
         if (!nation) return
         nation = nation.getAttribute('data-nname')
-        const nationResponse = await fetch(`https://www.nationstates.net/nation=testlandia?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`);
+        const nationResponse = await fetch(`https://www.nationstates.net/nation=${input.value}?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`);
         const nationHTML = await nationResponse.text();
         const nationDocument = new DOMParser().parseFromString(nationHTML, "text/html");
 
