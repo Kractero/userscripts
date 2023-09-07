@@ -56,7 +56,10 @@ const validBadges = [
 
 async function fetchData() {
     try {
-        const nationResponse = await fetch(`https://www.nationstates.net/nation=${input.value}`);
+        let nation = document.querySelector('#loggedin')
+        if (!nation) return
+        nation = nation.getAttribute('data-nname')
+        const nationResponse = await fetch(`https://www.nationstates.net/nation=testlandia?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`);
         const nationHTML = await nationResponse.text();
         const nationDocument = new DOMParser().parseFromString(nationHTML, "text/html");
 
@@ -67,7 +70,11 @@ async function fetchData() {
             throw new Error("Invalid nation");
         }
 
-        const nationApiResponse = await fetch(`https://www.nationstates.net/cgi-bin/api.cgi?nation=${input.value}&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region`);
+        const nationApiResponse = await fetch("https://www.nationstates.net/cgi-bin/api.cgi?nation=testlandia&q=name+notable+gdp+population+flag+category+motto+demonym+type", {
+          headers: {
+            "User-Agent": `CardPreview by Kractero usedBy ${nation}`,
+          },
+        });
         const nationXml = await nationApiResponse.text();
         const nationXmlDoc = new DOMParser().parseFromString(nationXml, "application/xml");
 
