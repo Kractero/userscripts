@@ -234,7 +234,7 @@ async function fetchData() {
                     </div>
                     <div class="deckcard-stripe">
                         <div class="deckcard-season">SEASON ONE</div>
-                        <div class="deckcard-region"><a href="region=testregionia" class="rlink">${region}</a></div>
+                        <div class="deckcard-region"><a href="region=${region}" class="rlink">${region}</a></div>
                     </div>
                 </figure>
                 <figure class="back"></figure>
