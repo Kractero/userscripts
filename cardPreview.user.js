@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Card Preview
 // @namespace    Kra
-// @version      1.0
+// @version      1.1
 // @description  Preview cards
 // @author       Kractero
 // @match        https://www.nationstates.net/page=blank/preview
@@ -234,7 +234,7 @@ async function fetchData() {
                     </div>
                     <div class="deckcard-stripe">
                         <div class="deckcard-season">SEASON ONE</div>
-                        <div class="deckcard-region"><a href="region=${region}" class="rlink">${region}</a></div>
+                        <div class="deckcard-region"><a href="region=testregionia" class="rlink">${region}</a></div>
                     </div>
                 </figure>
                 <figure class="back"></figure>
@@ -458,3 +458,8 @@ async function fetchData() {
 }
 
 document.getElementById("submitButton").addEventListener("click", fetchData);
+window.addEventListener("keydown", (e) => {
+    if (e.keyCode === 13 && input.value) {
+        fetchData()
+    }
+});
