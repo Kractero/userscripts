@@ -1,162 +1,243 @@
 // ==UserScript==
 // @name         Card Preview
 // @namespace    Kra
-// @version      1.1
+// @version      1.0
 // @description  Preview cards
 // @author       Kractero
-// @match        https://www.nationstates.net/page=blank/preview
+// @match        https://www.nationstates.net/page=upload_flag
+// @match        https://www.nationstates.net/page=deck/card=*
 // @grant        none
 // ==/UserScript==
 
-const label = document.createElement("label");
-label.setAttribute("for", "userInput");
-label.textContent = "Enter something:";
+const existingContentDiv = document.getElementById("content");
+const headinger = document.createElement("h1");
+headinger.textContent = "Preview a Card with a flag";
 
 const input = document.createElement("input");
 input.setAttribute("type", "text");
 input.setAttribute("id", "userInput");
+input.placeholder = "Testlandia";
 
 const button = document.createElement("button");
 button.setAttribute("id", "submitButton");
+button.classList.add("button");
 button.textContent = "Submit";
 
 const contentDiv = document.createElement("div");
 
-contentDiv.appendChild(label);
-contentDiv.appendChild(input);
-contentDiv.appendChild(button);
+if (window.location.href.includes("upload_flag")) {
+  contentDiv.appendChild(headinger);
+  contentDiv.appendChild(input);
+  contentDiv.appendChild(button);
+  existingContentDiv.prepend(contentDiv);
+} else {
+  const buttonDiv = document.createElement("div");
+  buttonDiv.setAttribute("id", "center");
+  buttonDiv.style.width = "100%";
+  buttonDiv.style.display = "flex";
+  buttonDiv.style.justifyContent = "center";
+  buttonDiv.appendChild(button);
+  existingContentDiv.insertBefore(
+    buttonDiv,
+    document.querySelector(".minorinfo")
+  );
+}
 
-const existingContentDiv = document.getElementById("content");
-
-existingContentDiv.innerHTML = "";
-existingContentDiv.appendChild(contentDiv);
 const stylesheet = document.createElement("link");
 
 stylesheet.rel = "stylesheet";
 stylesheet.type = "text/css";
 stylesheet.href = "https://www.nationstates.net/deck_v1669164404.css";
 
-const cards = document.createElement('div')
-cards.id = "cards"
+const cards = document.createElement("div");
+cards.id = "cards";
 
 document.head.appendChild(stylesheet);
 
 const validBadges = [
-    "Founder",
-    "Retired Moderator",
-    "Easter Egg",
-    "Issues Author",
-    "Postmaster",
-    "Postmaster-General",
-    "Historical Resolution Author",
-    "General Assembly Resolution Author",
-    "Moderator",
-    "Site Supporter"
+  "Founder",
+  "Retired Moderator",
+  "Easter Egg",
+  "Issues Author",
+  "Postmaster",
+  "Postmaster-General",
+  "Historical Resolution Author",
+  "General Assembly Resolution Author",
+  "Moderator",
+  "Site Supporter",
 ];
 
 async function fetchData() {
-    try {
-        let nation = document.querySelector('#loggedin')
-        if (!nation) return
-        nation = nation.getAttribute('data-nname')
-        const nationResponse = await fetch(`https://www.nationstates.net/nation=${input.value}?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`);
-        const nationHTML = await nationResponse.text();
-        const nationDocument = new DOMParser().parseFromString(nationHTML, "text/html");
+  try {
+    console.log("jut to verify im being called");
+    let nation = document.querySelector("#loggedin");
+    if (!nation) {
+      return;
+    }
+    nation = nation.getAttribute("data-nname");
+    const nationResponse = await fetch(
+      `https://www.nationstates.net/nation=${
+        input.value || document.querySelector(".nname").textContent
+      }?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`
+    );
+    const nationHTML = await nationResponse.text();
+    const nationDocument = new DOMParser().parseFromString(
+      nationHTML,
+      "text/html"
+    );
 
-        let nationName = nationDocument.querySelector('.newtitlename a');
-        if (nationName) {
-            nationName = nationName.textContent;
-        } else {
-            throw new Error("Invalid nation");
-        }
+    let nationName = nationDocument.querySelector(".newtitlename a");
+    if (nationName) {
+      nationName = nationName.textContent;
+    } else {
+      throw new Error("Invalid nation");
+    }
 
-        const nationApiResponse = await fetch(`https://www.nationstates.net/cgi-bin/api.cgi?nation=${input.value}&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region`, {
-          headers: {
-            "User-Agent": `CardPreview by Kractero usedBy ${nation}`,
-          },
-        });
-        const nationXml = await nationApiResponse.text();
-        const nationXmlDoc = new DOMParser().parseFromString(nationXml, "application/xml");
+    const nationApiResponse = await fetch(
+      `https://www.nationstates.net/cgi-bin/api.cgi?nation=${
+        input.value || document.querySelector(".nname").textContent
+      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region`,
+      {
+        headers: {
+          "User-Agent": `CardPreview by Kractero usedBy ${nation}`,
+        },
+      }
+    );
+    const nationXml = await nationApiResponse.text();
+    const nationXmlDoc = new DOMParser().parseFromString(
+      nationXml,
+      "application/xml"
+    );
 
-        const name = nationXmlDoc.querySelector('NAME').textContent;
-        const dbid = nationXmlDoc.querySelector('DBID').textContent;
-        const type = nationXmlDoc.querySelector('TYPE').textContent;
-        const motto = nationXmlDoc.querySelector('MOTTO').textContent;
-        const category = nationXmlDoc.querySelector('CATEGORY').textContent;
-        const population = nationXmlDoc.querySelector('POPULATION').textContent;
-        const flag = nationXmlDoc.querySelector('FLAG').textContent.trim();
-        const demonym = nationXmlDoc.querySelector('DEMONYM2PLURAL').textContent;
-        const gdp = nationXmlDoc.querySelector('GDP').textContent;
-        const notable = nationXmlDoc.querySelector('NOTABLE').textContent;
-        const region = nationXmlDoc.querySelector('REGION').textContent;
+    const name = nationXmlDoc.querySelector("NAME").textContent;
+    const dbid = nationXmlDoc.querySelector("DBID").textContent;
+    const type = nationXmlDoc.querySelector("TYPE").textContent;
+    const motto = nationXmlDoc.querySelector("MOTTO").textContent;
+    const category = nationXmlDoc.querySelector("CATEGORY").textContent;
+    const population = nationXmlDoc.querySelector("POPULATION").textContent;
+    const flag = nationXmlDoc.querySelector("FLAG").textContent.trim();
+    const demonym = nationXmlDoc.querySelector("DEMONYM2PLURAL").textContent;
+    const gdp = nationXmlDoc.querySelector("GDP").textContent;
+    const notable = nationXmlDoc.querySelector("NOTABLE").textContent;
+    const region = nationXmlDoc.querySelector("REGION").textContent;
 
-        const ccbadges = nationDocument.querySelector('#wabadges a')
-        const cc = {}
-        if (ccbadges) {
-            ccbadges.link = ccbadges.href,
-            ccbadges.img = ccbadges.querySelector('img').getAttribute('src').replace('.svg', '.png'),
-            ccbadges.title = ccbadges.querySelector('img').getAttribute('title')
-        }
+    const ccbadges = nationDocument.querySelector("#wabadges a");
+    const cc = {};
+    if (ccbadges) {
+      (ccbadges.link = ccbadges.href),
+        (ccbadges.img = ccbadges
+          .querySelector("img")
+          .getAttribute("src")
+          .replace(".svg", ".png")),
+        (ccbadges.title = ccbadges.querySelector("img").getAttribute("title"));
+    }
 
-        const badges = Array.from(nationDocument.querySelectorAll('#badge_rack .badge div')).map(badge => {
-            return {
-                class: badge.classList[0],
-                name: badge.textContent,
-                icon: badge.querySelector('i')
-            }
-        });
-        const trophiesCabinet = Array.from(nationDocument.querySelectorAll('#trophycabinet a'));
-        const trophies = Array.from(nationDocument.querySelectorAll('.trophyrack > img'));
+    const badges = Array.from(
+      nationDocument.querySelectorAll("#badge_rack .badge div")
+    ).map((badge) => {
+      return {
+        class: badge.classList[0],
+        name: badge.textContent,
+        icon: badge.querySelector("i"),
+      };
+    });
+    const trophiesCabinet = Array.from(
+      nationDocument.querySelectorAll("#trophycabinet a")
+    );
+    const trophies = Array.from(
+      nationDocument.querySelectorAll(".trophyrack > img")
+    );
 
-        const top3trophies = trophiesCabinet.slice(0, 3).map(trophy => ({
-            img: trophy.querySelector('img').getAttribute('src'),
-            text: trophy.querySelector('img').getAttribute('title'),
-            link: trophy.href
-        }));
+    const top3trophies = trophiesCabinet.slice(0, 3).map((trophy) => ({
+      img: trophy.querySelector("img").getAttribute("src"),
+      text: trophy.querySelector("img").getAttribute("title"),
+      link: trophy.href,
+    }));
 
-        const mainBadges = trophies
-            .map(trophy => {
-                const title = trophy.getAttribute('title');
-                const src = trophy.getAttribute('src')
-                return {
-                    title: validBadges.includes(title) || title.includes('Easter Egg') ? title : null,
-                    src: src
-                };
-            })
-            .filter(badge => badge);
+    const mainBadges = trophies
+      .map((trophy) => {
+        const title = trophy.getAttribute("title");
+        const src = trophy.getAttribute("src");
+        return {
+          title:
+            validBadges.includes(title) || title.includes("Easter Egg")
+              ? title
+              : null,
+          src: src,
+        };
+      })
+      .filter((badge) => badge);
 
-        const rarities = ["common", "uncommon", "rare", "ultra-rare", "epic", "legendary"]
+    const rarities = [
+      "common",
+      "uncommon",
+      "rare",
+      "ultra-rare",
+      "epic",
+      "legendary",
+    ];
 
-        const numberOfDigits = population.length;
-        let formattedPopulation;
-        if (numberOfDigits >= 5) {
-          formattedPopulation = population.slice(0, 2) + "." + population.slice(2) + " billion";
-        } else if (numberOfDigits === 4) {
-          formattedPopulation = population.slice(0, 1) + "." + population.slice(1) + " billion";
-        } else if (numberOfDigits === 3) {
-          formattedPopulation = population.slice(0, 1) + "." + population.slice(1) + " million";
-        } else if (numberOfDigits === 2) {
-          formattedPopulation = population.slice(0, 2) + " million";
-        } else if (numberOfDigits === 1) {
-          formattedPopulation = population + " million";
-        }
+    const numberOfDigits = population.length;
+    let formattedPopulation;
+    if (numberOfDigits >= 5) {
+      formattedPopulation =
+        population.slice(0, 2) + "." + population.slice(2) + " billion";
+    } else if (numberOfDigits === 4) {
+      formattedPopulation =
+        population.slice(0, 1) + "." + population.slice(1) + " billion";
+    } else if (numberOfDigits === 3) {
+      formattedPopulation =
+        population.slice(0, 1) + "." + population.slice(1) + " million";
+    } else if (numberOfDigits === 2) {
+      formattedPopulation = population.slice(0, 2) + " million";
+    } else if (numberOfDigits === 1) {
+      formattedPopulation = population + " million";
+    }
 
-        const economyDigits = gdp.length;
-        let econPrefix;
-        if (economyDigits >= 13) {
-            econPrefix = `T`;
-        } else if (economyDigits >= 10) {
-            econPrefix = `B`;
-        } else if (economyDigits >= 7) {
-            econPrefix = `M`;
-        } else {
-            econPrefix = `M`;
-        }
+    const economyDigits = gdp.length;
+    let econPrefix;
+    if (economyDigits >= 13) {
+      econPrefix = `T`;
+    } else if (economyDigits >= 10) {
+      econPrefix = `B`;
+    } else if (economyDigits >= 7) {
+      econPrefix = `M`;
+    } else {
+      econPrefix = `M`;
+    }
 
-        let s1rarity = rarities[Math.floor(Math.random()*rarities.length)]
-        let s2rarity = rarities[Math.floor(Math.random()*rarities.length)]
-        let s3rarity = rarities[Math.floor(Math.random()*rarities.length)]
-        const hachteeml = `
+    let s1rarity = document.querySelector(".deckcard-category", "::before")
+      ? window
+          .getComputedStyle(
+            document.querySelector(".deckcard-category"),
+            "::before"
+          )
+          .getPropertyValue("content")
+          .replace('"', "")
+          .toLowerCase()
+      : rarities[Math.floor(Math.random() * rarities.length)];
+    let s2rarity = document.querySelector(".deckcard-category", "::before")
+      ? window
+          .getComputedStyle(
+            document.querySelector(".deckcard-category"),
+            "::before"
+          )
+          .getPropertyValue("content")
+          .replace('"', "")
+          .toLowerCase()
+      : rarities[Math.floor(Math.random() * rarities.length)];
+    let s3rarity = document.querySelector(".deckcard-category", "::before")
+      ? window
+          .getComputedStyle(
+            document.querySelector(".deckcard-category"),
+            "::before"
+          )
+          .getPropertyValue("content")
+          .replace('"', "")
+          .toLowerCase()
+      : rarities[Math.floor(Math.random() * rarities.length)];
+
+    const hachteeml = `
         <div class="deckcard-container">
             <div class="deckcard deckcard-season-1 " data-cardid="1" data-season="1"
                 style="border: thick solid rgb(0, 0, 255);">
@@ -184,20 +265,26 @@ async function fetchData() {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                                ${badges.map(badge => {
-                                    return (
-                                        `
+                                ${badges
+                                  .map((badge) => {
+                                    return `
                                             <div class="badge">
                                                 <div class="${badge.class}">
-                                                    ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ""}
+                                                    ${
+                                                      badge.icon
+                                                        ? `<i class="${badge.icon.classList[0]}"></i>`
+                                                        : ""
+                                                    }
                                                     ${badge.name}
                                                 </div>
                                             </div>
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
-                            ${cc && cc.link ? `<div>
+                            ${
+                              cc && cc.link
+                                ? `<div>
                                 <div id="wabadges">
                                     <a class="wabadge" href="${cc.link}">
                                         <img
@@ -206,35 +293,39 @@ async function fetchData() {
                                             title="${cc.title}">
                                     </a>
                                 </div>
-                            </div>` : ""}
+                            </div>`
+                                : ""
+                            }
                             <div class="specialbadges">
-                                ${mainBadges.map(badge => {
-                                    return (
-                                        `
+                                ${mainBadges
+                                  .map((badge) => {
+                                    return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                             <div id="trophycabinet">
-                                ${top3trophies.map(trophy => {
-                                    return (
-                                        `
+                                ${top3trophies
+                                  .map((trophy) => {
+                                    return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                         </div>
-                        <div class="deckcard-desc">${formattedPopulation} ${demonym}. ${notable.charAt(0).toUpperCase() + notable.slice(1)}</div>
+                        <div class="deckcard-desc">${formattedPopulation} ${demonym}. ${
+      notable.charAt(0).toUpperCase() + notable.slice(1)
+    }</div>
                     </div>
                     <div class="deckcard-stripe">
                         <div class="deckcard-season">SEASON ONE</div>
-                        <div class="deckcard-region"><a href="region=testregionia" class="rlink">${region}</a></div>
+                        <div class="deckcard-region"><a href="region=${region}" class="rlink">${region}</a></div>
                     </div>
                 </figure>
                 <figure class="back"></figure>
@@ -266,20 +357,26 @@ async function fetchData() {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                                ${badges.map(badge => {
-                                    return (
-                                        `
+                                ${badges
+                                  .map((badge) => {
+                                    return `
                                             <div class="badge">
                                                 <div class="${badge.class}">
-                                                    ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ""}
+                                                    ${
+                                                      badge.icon
+                                                        ? `<i class="${badge.icon.classList[0]}"></i>`
+                                                        : ""
+                                                    }
                                                     ${badge.name}
                                                 </div>
                                             </div>
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
-                            ${cc && cc.link ? `<div>
+                            ${
+                              cc && cc.link
+                                ? `<div>
                                 <div id="wabadges">
                                     <a class="wabadge" href="${cc.link}">
                                         <img
@@ -288,33 +385,41 @@ async function fetchData() {
                                             title="${cc.title}">
                                     </a>
                                 </div>
-                            </div>` : ""}
+                            </div>`
+                                : ""
+                            }
                             <div class="specialbadges">
-                                ${mainBadges.map(badge => {
-                                    return (
-                                        `
+                                ${mainBadges
+                                  .map((badge) => {
+                                    return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                             <div id="trophycabinet">
-                                ${top3trophies.map(trophy => {
-                                    return (
-                                        `
+                                ${top3trophies
+                                  .map((trophy) => {
+                                    return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                         </div>
                         </div>
-                        <div class="deckcard-desc"><span class="deckcard-desc-bit">${formattedPopulation.slice(0,4)}<span class="pop-units">b</span><i
-                                    class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(0,5)}<span
+                        <div class="deckcard-desc"><span class="deckcard-desc-bit">${formattedPopulation.slice(
+                          0,
+                          4
+                        )}<span class="pop-units">b</span><i
+                                    class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(
+                                      0,
+                                      5
+                                    )}<span
                                     class="pop-units">${econPrefix}</span><i class="icon-industrial-building"></i></span></div>
                     </div>
                     <div class="deckcard-stripe">
@@ -350,7 +455,9 @@ async function fetchData() {
                             </div>
                         </div>
                         <div class="s3-mid deckcard-badges">
-                        ${cc && cc.link ? `<div>
+                        ${
+                          cc && cc.link
+                            ? `<div>
                             <div id="wabadges">
                                 <a class="wabadge" href="${cc.link}">
                                     <img
@@ -359,50 +466,62 @@ async function fetchData() {
                                         title="${cc.title}">
                                 </a>
                             </div>
-                        </div>` : ""}
+                        </div>`
+                            : ""
+                        }
                         <div class="role-badges">
-                            ${badges.map(badge => {
-                                return (
-                                    `
+                            ${badges
+                              .map((badge) => {
+                                return `
                                         <div class="badge">
                                             <div class="${badge.class}">
-                                                ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ""}
+                                                ${
+                                                  badge.icon
+                                                    ? `<i class="${badge.icon.classList[0]}"></i>`
+                                                    : ""
+                                                }
                                                 ${badge.name}
                                             </div>
                                         </div>
-                                    `
-                                )
-                            }).join('')}
+                                    `;
+                              })
+                              .join("")}
                         </div>
                         <div class="trophies">
                             <div class="specialbadges">
-                                ${mainBadges.map(badge => {
-                                    return (
-                                        `
+                                ${mainBadges
+                                  .map((badge) => {
+                                    return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                             <div id="trophycabinet">
-                                ${top3trophies.map(trophy => {
-                                    return (
-                                        `
+                                ${top3trophies
+                                  .map((trophy) => {
+                                    return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
-                                        `
-                                    )
-                                }).join('')}
+                                        `;
+                                  })
+                                  .join("")}
                             </div>
                         </div>
                         </div>
                         <div class="s3-lower">
                             <div class="deckcard-lower-collection deckcard-govt-collection">
-                                <span class="deckcard-desc-bit">${formattedPopulation.slice(0,4)}<span class="pop-units">b</span><i
-                                        class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(0,5)}<span
+                                <span class="deckcard-desc-bit">${formattedPopulation.slice(
+                                  0,
+                                  4
+                                )}<span class="pop-units">b</span><i
+                                        class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(
+                                          0,
+                                          5
+                                        )}<span
                                         class="pop-units">${econPrefix}</span><i class="icon-industrial-building"></i></span>
                             </div>
                             <div class="deckcard-lower-collection">
@@ -432,13 +551,21 @@ async function fetchData() {
                 <figure class="back"></figure>
             </div>
         </div>
-        `
+        `;
 
-        cards.innerHTML = hachteeml
-        existingContentDiv.append(cards)
+    cards.innerHTML = hachteeml;
+    if (window.location.href.includes("upload_flag")) {
+      existingContentDiv.insertBefore(cards, contentDiv.nextSibling);
+    } else {
+      cards.style.justifyContent = "center";
+      existingContentDiv.insertBefore(
+        cards,
+        document.querySelector(".minorinfo")
+      );
+    }
 
-        const stylistic = document.createElement('style')
-        stylistic.innerHTML = `
+    const stylistic = document.createElement("style");
+    stylistic.innerHTML = `
             #content {
                 margin-top: 1rem;
                 width: 100%;
@@ -449,17 +576,11 @@ async function fetchData() {
             .deckcard-season-1 {
                 overflow: hidden;
             }
-        `
-        document.getElementsByTagName("head")[0].appendChild(stylistic);
-
-    } catch (error) {
-        console.error("Error:", error.message);
-    }
+        `;
+    document.getElementsByTagName("head")[0].appendChild(stylistic);
+  } catch (error) {
+    console.error("Error:", error.message);
+  }
 }
 
 document.getElementById("submitButton").addEventListener("click", fetchData);
-window.addEventListener("keydown", (e) => {
-    if (e.keyCode === 13 && input.value) {
-        fetchData()
-    }
-});
