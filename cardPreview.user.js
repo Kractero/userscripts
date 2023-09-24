@@ -5,7 +5,7 @@
 // @description  Preview cards
 // @author       Kractero
 // @match        https://www.nationstates.net/page=upload_flag
-// @match        https://www.nationstates.net/page=deck/card=*
+// @match				 https://www.nationstates.net/page=deck/card=*
 // @grant        none
 // ==/UserScript==
 
@@ -30,6 +30,14 @@ if (window.location.href.includes("upload_flag")) {
   contentDiv.appendChild(input);
   contentDiv.appendChild(button);
   existingContentDiv.prepend(contentDiv);
+  const previewButton = document.createElement("button");
+  previewButton.setAttribute("id", "previewButton");
+  previewButton.classList.add("button");
+  previewButton.textContent = "Preview Flag";
+  previewButton.addEventListener('click', () => {
+    fetchData(document.querySelector("#previewimage").getAttribute("src"));
+  });
+  document.querySelector('fieldset').appendChild(previewButton);
 } else {
   const buttonDiv = document.createElement("div");
   buttonDiv.setAttribute("id", "center");
@@ -67,17 +75,15 @@ const validBadges = [
   "Site Supporter",
 ];
 
-async function fetchData() {
+async function fetchData(preview) {
   try {
-    console.log("jut to verify im being called");
     let nation = document.querySelector("#loggedin");
     if (!nation) {
       return;
     }
     nation = nation.getAttribute("data-nname");
     const nationResponse = await fetch(
-      `https://www.nationstates.net/nation=${
-        input.value || document.querySelector(".nname").textContent
+      `https://www.nationstates.net/nation=${input.value ? input.value : document.querySelector(".nname") ? document.querySelector(".nname").textContent : nation
       }?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`
     );
     const nationHTML = await nationResponse.text();
@@ -94,8 +100,7 @@ async function fetchData() {
     }
 
     const nationApiResponse = await fetch(
-      `https://www.nationstates.net/cgi-bin/api.cgi?nation=${
-        input.value || document.querySelector(".nname").textContent
+      `https://www.nationstates.net/cgi-bin/api.cgi?nation=${input.value ? input.value : document.querySelector(".nname") ? document.querySelector(".nname").textContent : nation
       }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region`,
       {
         headers: {
@@ -115,7 +120,7 @@ async function fetchData() {
     const motto = nationXmlDoc.querySelector("MOTTO").textContent;
     const category = nationXmlDoc.querySelector("CATEGORY").textContent;
     const population = nationXmlDoc.querySelector("POPULATION").textContent;
-    const flag = nationXmlDoc.querySelector("FLAG").textContent.trim();
+    let flag = preview || nationXmlDoc.querySelector("FLAG").textContent.trim();
     const demonym = nationXmlDoc.querySelector("DEMONYM2PLURAL").textContent;
     const gdp = nationXmlDoc.querySelector("GDP").textContent;
     const notable = nationXmlDoc.querySelector("NOTABLE").textContent;
@@ -208,33 +213,33 @@ async function fetchData() {
 
     let s1rarity = document.querySelector(".deckcard-category", "::before")
       ? window
-          .getComputedStyle(
-            document.querySelector(".deckcard-category"),
-            "::before"
-          )
-          .getPropertyValue("content")
-          .replace('"', "")
-          .toLowerCase()
+        .getComputedStyle(
+          document.querySelector(".deckcard-category"),
+          "::before"
+        )
+        .getPropertyValue("content")
+        .replace('"', "")
+        .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
     let s2rarity = document.querySelector(".deckcard-category", "::before")
       ? window
-          .getComputedStyle(
-            document.querySelector(".deckcard-category"),
-            "::before"
-          )
-          .getPropertyValue("content")
-          .replace('"', "")
-          .toLowerCase()
+        .getComputedStyle(
+          document.querySelector(".deckcard-category"),
+          "::before"
+        )
+        .getPropertyValue("content")
+        .replace('"', "")
+        .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
     let s3rarity = document.querySelector(".deckcard-category", "::before")
       ? window
-          .getComputedStyle(
-            document.querySelector(".deckcard-category"),
-            "::before"
-          )
-          .getPropertyValue("content")
-          .replace('"', "")
-          .toLowerCase()
+        .getComputedStyle(
+          document.querySelector(".deckcard-category"),
+          "::before"
+        )
+        .getPropertyValue("content")
+        .replace('"', "")
+        .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
 
     const hachteeml = `
@@ -266,25 +271,23 @@ async function fetchData() {
                         <div class="deckcard-badges">
                             <div>
                                 ${badges
-                                  .map((badge) => {
-                                    return `
+        .map((badge) => {
+          return `
                                             <div class="badge">
                                                 <div class="${badge.class}">
-                                                    ${
-                                                      badge.icon
-                                                        ? `<i class="${badge.icon.classList[0]}"></i>`
-                                                        : ""
-                                                    }
+                                                    ${badge.icon
+              ? `<i class="${badge.icon.classList[0]}"></i>`
+              : ""
+            }
                                                     ${badge.name}
                                                 </div>
                                             </div>
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
-                            ${
-                              cc && cc.link
-                                ? `<div>
+                            ${cc && cc.link
+        ? `<div>
                                 <div id="wabadges">
                                     <a class="wabadge" href="${cc.link}">
                                         <img
@@ -294,34 +297,33 @@ async function fetchData() {
                                     </a>
                                 </div>
                             </div>`
-                                : ""
-                            }
+        : ""
+      }
                             <div class="specialbadges">
                                 ${mainBadges
-                                  .map((badge) => {
-                                    return `
+        .map((badge) => {
+          return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
-                                  .map((trophy) => {
-                                    return `
+        .map((trophy) => {
+          return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                         </div>
-                        <div class="deckcard-desc">${formattedPopulation} ${demonym}. ${
-      notable.charAt(0).toUpperCase() + notable.slice(1)
-    }</div>
+                        <div class="deckcard-desc">${formattedPopulation} ${demonym}. ${notable.charAt(0).toUpperCase() + notable.slice(1)
+      }</div>
                     </div>
                     <div class="deckcard-stripe">
                         <div class="deckcard-season">SEASON ONE</div>
@@ -358,25 +360,23 @@ async function fetchData() {
                         <div class="deckcard-badges">
                             <div>
                                 ${badges
-                                  .map((badge) => {
-                                    return `
+        .map((badge) => {
+          return `
                                             <div class="badge">
                                                 <div class="${badge.class}">
-                                                    ${
-                                                      badge.icon
-                                                        ? `<i class="${badge.icon.classList[0]}"></i>`
-                                                        : ""
-                                                    }
+                                                    ${badge.icon
+              ? `<i class="${badge.icon.classList[0]}"></i>`
+              : ""
+            }
                                                     ${badge.name}
                                                 </div>
                                             </div>
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
-                            ${
-                              cc && cc.link
-                                ? `<div>
+                            ${cc && cc.link
+        ? `<div>
                                 <div id="wabadges">
                                     <a class="wabadge" href="${cc.link}">
                                         <img
@@ -386,40 +386,40 @@ async function fetchData() {
                                     </a>
                                 </div>
                             </div>`
-                                : ""
-                            }
+        : ""
+      }
                             <div class="specialbadges">
                                 ${mainBadges
-                                  .map((badge) => {
-                                    return `
+        .map((badge) => {
+          return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
-                                  .map((trophy) => {
-                                    return `
+        .map((trophy) => {
+          return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                         </div>
                         </div>
                         <div class="deckcard-desc"><span class="deckcard-desc-bit">${formattedPopulation.slice(
-                          0,
-                          4
-                        )}<span class="pop-units">b</span><i
+          0,
+          4
+        )}<span class="pop-units">b</span><i
                                     class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(
-                                      0,
-                                      5
-                                    )}<span
+          0,
+          5
+        )}<span
                                     class="pop-units">${econPrefix}</span><i class="icon-industrial-building"></i></span></div>
                     </div>
                     <div class="deckcard-stripe">
@@ -455,9 +455,8 @@ async function fetchData() {
                             </div>
                         </div>
                         <div class="s3-mid deckcard-badges">
-                        ${
-                          cc && cc.link
-                            ? `<div>
+                        ${cc && cc.link
+        ? `<div>
                             <div id="wabadges">
                                 <a class="wabadge" href="${cc.link}">
                                     <img
@@ -467,61 +466,60 @@ async function fetchData() {
                                 </a>
                             </div>
                         </div>`
-                            : ""
-                        }
+        : ""
+      }
                         <div class="role-badges">
                             ${badges
-                              .map((badge) => {
-                                return `
+        .map((badge) => {
+          return `
                                         <div class="badge">
                                             <div class="${badge.class}">
-                                                ${
-                                                  badge.icon
-                                                    ? `<i class="${badge.icon.classList[0]}"></i>`
-                                                    : ""
-                                                }
+                                                ${badge.icon
+              ? `<i class="${badge.icon.classList[0]}"></i>`
+              : ""
+            }
                                                 ${badge.name}
                                             </div>
                                         </div>
                                     `;
-                              })
-                              .join("")}
+        })
+        .join("")}
                         </div>
                         <div class="trophies">
                             <div class="specialbadges">
                                 ${mainBadges
-                                  .map((badge) => {
-                                    return `
+        .map((badge) => {
+          return `
                                             <img src="${badge.src}" class="trophy" title="${badge.title}">
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
-                                  .map((trophy) => {
-                                    return `
+        .map((trophy) => {
+          return `
                                             <a href="${trophy.link}">
                                                 <img
                                                 src="${trophy.img}" class="trophy"
                                                 alt="${trophy.text}" title="${trophy.text}">
                                             </a>
                                         `;
-                                  })
-                                  .join("")}
+        })
+        .join("")}
                             </div>
                         </div>
                         </div>
                         <div class="s3-lower">
                             <div class="deckcard-lower-collection deckcard-govt-collection">
                                 <span class="deckcard-desc-bit">${formattedPopulation.slice(
-                                  0,
-                                  4
-                                )}<span class="pop-units">b</span><i
+          0,
+          4
+        )}<span class="pop-units">b</span><i
                                         class="icon-male"></i></span><span class="deckcard-desc-bit">${gdp.slice(
-                                          0,
-                                          5
-                                        )}<span
+          0,
+          5
+        )}<span
                                         class="pop-units">${econPrefix}</span><i class="icon-industrial-building"></i></span>
                             </div>
                             <div class="deckcard-lower-collection">
@@ -583,4 +581,4 @@ async function fetchData() {
   }
 }
 
-document.getElementById("submitButton").addEventListener("click", fetchData);
+document.getElementById("submitButton").addEventListener("click", () => fetchData());
