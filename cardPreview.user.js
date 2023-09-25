@@ -211,7 +211,7 @@ async function fetchData(preview) {
       econPrefix = `M`;
     }
 
-    let s1rarity = document.querySelector(".deckcard-category", "::before")
+    let s1rarity = !window.location.href.includes('upload_flag')
       ? window
         .getComputedStyle(
           document.querySelector(".deckcard-category"),
@@ -221,7 +221,7 @@ async function fetchData(preview) {
         .replace('"', "")
         .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
-    let s2rarity = document.querySelector(".deckcard-category", "::before")
+    let s2rarity = !window.location.href.includes('upload_flag')
       ? window
         .getComputedStyle(
           document.querySelector(".deckcard-category"),
@@ -231,7 +231,7 @@ async function fetchData(preview) {
         .replace('"', "")
         .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
-    let s3rarity = document.querySelector(".deckcard-category", "::before")
+    let s3rarity = !window.location.href.includes('upload_flag')
       ? window
         .getComputedStyle(
           document.querySelector(".deckcard-category"),
