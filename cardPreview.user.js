@@ -219,6 +219,7 @@ async function fetchData(preview) {
         )
         .getPropertyValue("content")
         .replace('"', "")
+        .replace(" ", "-")
         .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
     let s2rarity = !window.location.href.includes('upload_flag')
@@ -229,6 +230,7 @@ async function fetchData(preview) {
         )
         .getPropertyValue("content")
         .replace('"', "")
+        .replace(" ", "-")
         .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
     let s3rarity = !window.location.href.includes('upload_flag')
@@ -239,6 +241,7 @@ async function fetchData(preview) {
         )
         .getPropertyValue("content")
         .replace('"', "")
+        .replace(" ", "-")
         .toLowerCase()
       : rarities[Math.floor(Math.random() * rarities.length)];
 
