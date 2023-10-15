@@ -1,5 +1,5 @@
 # NationStates Scripts
-Various userscripts for trading cards. I use these with [FireMonkey](https://addons.mozilla.org/en-US/firefox/addon/firemonkey/) but it also works with Tampermonkey.
+Various userscripts for trading cards. I use these with [Violetmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/) but it also works with Tampermonkey.
 
 Scripts:
 1. Legendary Notify - [Install](https://github.com/Kractero/userscripts/raw/main/legendaryNotify.user.js)
