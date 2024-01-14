@@ -76,7 +76,7 @@
     const blur = document.createElement('div')
     blur.classList = "modal-content"
     const confirm = document.createElement('button')
-    confirm.textContent('Switching puppet')
+    confirm.textContent = 'Switching puppet'
     blur.appendChild(confirm)
     modal.appendChild(blur)
     function showModal() {
@@ -410,7 +410,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             z-index: 9999;
           }
-          
+
           .modal-content {
             position: absolute;
             top: 50%;
