@@ -4,22 +4,21 @@
 // @version      1.0
 // @description  Make legendary cards bigger and play sound effect to notify
 // @author       Kractero
-// @match        https://www.nationstates.net/page=deck
+// @match        https://www.nationstates.net/page=deck*
 // @downloadURL  https://github.com/Kractero/userscripts/raw/main/legendaryNotify.user.js
 // @updateURL    https://github.com/Kractero/userscripts/raw/main/legendaryNotify.user.js
-// @grant        none
+// @grant        window.close
 // ==/UserScript==
 
 (function () {
   'use strict';
-  // if (document.querySelector(".error")) return;
+  if (document.querySelector(".error")) return;
+  if (!document.querySelector('.deck-loot-box')) return;
   let notifier = document.createElement('audio');
-  // replace with any
-  notifier.src = 'https://ucarecdn.com/c4a98ab4-d71a-4c59-914c-06190281d30d/';
+  notifier.src = 'https://ucarecdn.com/a0661e8c-2134-46dc-9912-d0963bb9c231/';
   let valuesfx = document.createElement('audio');
-  valuesfx.src = 'https://ucarecdn.com/a0661e8c-2134-46dc-9912-d0963bb9c231/';
+  valuesfx.src = 'https://ucarecdn.com/c4a98ab4-d71a-4c59-914c-06190281d30d/';
   const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
-  if (!cards) return;
   const rarities = Array.from(cards).map((card) => {
     const check = card.querySelector('.deckcard-category');
     const rarity = getComputedStyle(check, ':before').getPropertyValue(
@@ -72,6 +71,5 @@
     valuesfx.play();
   }
 
-  // if using with gotissues, this can close a pack if it has no legendary or valuable card
-  // if (resizes.length === 0 && valuables.length === 0) window.close();
+  if (resizes.length === 0 && valuables.length === 0) window.close();
 })();
