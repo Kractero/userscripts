@@ -247,8 +247,7 @@ async function fetchData(preview) {
 
     const hachteeml = `
         <div class="deckcard-container">
-            <div class="deckcard deckcard-season-1 " data-cardid="1" data-season="1"
-                style="border: thick solid rgb(0, 0, 255);">
+            <div class="deckcard deckcard-season-1 " data-cardid="1" data-season="1">
                 <figure class="front deckcard-category-${s1rarity}">
                     <div class="deckcard-flag"
                         style="background-image:url(${flag})">
