@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         Move Effects and Sort
-// @namespace    Kra
 // @version      1.0
 // @description  Move issue effects to the top and sort by badge ranks
 // @author       Kractero
-// @match        https://www.nationstates.net/page=enact_dilemma/*
+// @match        https://*.nationstates.net/page=enact_dilemma/*
 // @downloadUrl  https://github.com/Kractero/userscripts/raw/main/moveEffects.user.js
 // @downloadUrl  https://github.com/Kractero/userscripts/raw/main/moveEffects.user.js
 // @grant        none

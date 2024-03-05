@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			 Hide Non-Sales Transfers
 // @author           Kractero
-// @match            https://www.nationstates.net/*trades_history=1*
+// @match            https://*.nationstates.net/*trades_history=1*
 // @version          1.0
 // @downloadURL      https://github.com/Kractero/userscripts/raw/main/hideNonSales.user.js
 // @updateURL        https://github.com/Kractero/userscripts/raw/main/hideNonSales.user.js

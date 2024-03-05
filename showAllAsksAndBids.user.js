@@ -3,10 +3,10 @@
 // @version          1.0
 // @description      Show All Asks and Bids
 // @author           Kractero
-// @match            https://www.nationstates.net/*page=deck*/card=*
+// @match            https://*.nationstates.net/*page=deck*/card=*
 // ==/UserScript==
 
-(function() {
+(function () {
   'use strict';
   document.querySelectorAll('.cardauctionhiddenrow')
     .forEach(element => {

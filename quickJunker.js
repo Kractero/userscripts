@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         Quick Junker
-// @namespace    Kra
 // @version      1.0
 // @description  Various farming tools
 // @author       Kractero
-// @match        https://www.nationstates.net/*
+// @match        https://*.nationstates.net/*
 // @downloadUrl  https://github.com/Kractero/userscripts/raw/scripts/quickJunker.user.js
 // @updateUrl    https://github.com/Kractero/userscripts/raw/scripts/quickJunker.user.js
 // @grant        none

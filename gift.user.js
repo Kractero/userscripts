@@ -3,7 +3,7 @@
 // @version      1.0
 // @description  Fill in gift to automatically.
 // @author       Kractero
-// @match        https://www.nationstates.net/*page=deck*/gift=*
+// @match        https://*.nationstates.net/*page=deck*/gift=*
 // @grant        none
 // ==/UserScript==
 

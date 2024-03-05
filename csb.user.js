@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         CSB
-// @namespace    Kra
 // @version      1.5
 // @description  try to take over the world!
-// @author       You
-// @match        https://www.nationstates.net/*
+// @author       Kractero
+// @match        https://*.nationstates.net/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=nationstates.net
 // @grant        none
 // ==/UserScript==
