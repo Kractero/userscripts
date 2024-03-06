@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser
 // @version      1.0
-// @description  Make legendary cards bigger and play sound effect to notify
+// @description  Autoclose packs that don't contain legendaries or cards over certain market value.
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck/nation=*
 // @grant        none
