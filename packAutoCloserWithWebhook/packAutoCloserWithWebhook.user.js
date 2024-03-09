@@ -33,7 +33,7 @@
                   embeds: [
                       {
                           title: 'Miner',
-                          description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_')}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_')}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}!`,
+                          description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}!`,
                       },
                   ],
               })
@@ -57,7 +57,7 @@
                           embeds: [
                               {
                                   title: 'Miner',
-                                  description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_')}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_')}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}, with ${marketValue} value!`,
+                                  description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}, with ${marketValue} value!`,
                               },
                           ],
                       })
