@@ -9,7 +9,7 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     let itemsPerPage = localStorage.getItem('perPage') ? parseInt(localStorage.getItem('perPage')) : 25;
@@ -72,9 +72,9 @@
     perPage.style.width = "50px";
     perPage.placeholder = itemsPerPage;
     perPage.addEventListener('input', (e) => {
-      itemsPerPage = parseInt(e.target.value);
-      localStorage.setItem('perPage', itemsPerPage)
-      displayItems();
+        itemsPerPage = parseInt(e.target.value);
+        localStorage.setItem('perPage', itemsPerPage)
+        displayItems();
     })
 
     let clearButton = document.createElement('button');
@@ -137,17 +137,17 @@
     tabs.appendChild(output);
     tab.appendChild(tabs)
     tab.append(nsHeaderText)
-    tab.addEventListener('mouseover', () => { tabs.style.display = 'flex' } )
-    tab.addEventListener('mouseleave', () => { tabs.style.display = 'none' } )
+    tab.addEventListener('mouseover', () => { tabs.style.display = 'flex' })
+    tab.addEventListener('mouseleave', () => { tabs.style.display = 'none' })
     if (!header) {
-      header = document.querySelector('#banner')
-      tab.style.right = "120px"
-      tab.id = "logoutbox"
-      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return
-      header.prepend(tab)
+        header = document.querySelector('#banner')
+        tab.style.right = "120px"
+        tab.id = "logoutbox"
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return
+        header.prepend(tab)
     } else {
-      header.appendChild(tab)
-      tab.classList.add('bel')
+        header.appendChild(tab)
+        tab.classList.add('bel')
     }
     header.style.position = 'relative'
 
@@ -162,7 +162,7 @@
             formData.append('nation', item);
             formData.append('password', passy);
             formData.append('autologin', 'yes')
-            const response = await fetch(url, {
+            const response = await fetch(`${url}?script=PuppetSwitcher__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`, {
                 method: 'POST',
                 body: formData
             })
@@ -256,8 +256,8 @@
             }
             if (!window.location.href.includes('dilemmas')) window.location.href = "https://www.nationstates.net/page=dilemmas"
             if (window.location.href.includes('dilemmas')) {
-              const issues = document.querySelectorAll('.dillistnpaper')
-              if (issues.length > 0) window.location.href = issues[0].getAttribute('href')
+                const issues = document.querySelectorAll('.dillistnpaper')
+                if (issues.length > 0) window.location.href = issues[0].getAttribute('href')
             }
         }
         if (event.key === ";") {
@@ -283,4 +283,4 @@
             }
         }
     });
-  })();
+})();

@@ -100,7 +100,7 @@ async function fetchData(preview) {
 
     const nationApiResponse = await fetch(
       `https://www.nationstates.net/cgi-bin/api.cgi?nation=${input.value ? input.value : document.querySelector(".nname") ? document.querySelector(".nname").textContent : nation
-      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region`,
+      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region&userAgent=CardPreview by Kractero usedBy ${nation}`,
       {
         headers: {
           "User-Agent": `CardPreview by Kractero usedBy ${nation}`,

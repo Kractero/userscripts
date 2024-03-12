@@ -92,7 +92,7 @@
             formData.append('nation', item);
             formData.append('password', password);
             formData.append('autologin', 'yes')
-            const response = await fetch(`${url}?userclick${Date.now()}`, {
+            const response = await fetch(`${url}?script=CSBMobile__by_Kractero__usedBy_${item}&userclick=${Date.now()}`, {
                 method: 'POST',
                 body: formData,
                 headers: {
