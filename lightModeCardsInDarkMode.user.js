@@ -2,7 +2,7 @@
 // @name         Remove Dark Mode Card Styles
 // @version      1.0
 // @description  Use light mode card styles in rift dark mode.
-// @match        https://www.nationstates.net/page=deck*
+// @match        https://www.nationstates.net/*page=deck*
 // @grant        none
 // ==/UserScript==
 
