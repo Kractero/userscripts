@@ -1,37 +1,42 @@
 // ==UserScript==
-// @name         Post-Creation Assistant
-// @namespace    Kra
+// @name         Move Puppets
+// @namespace    Kractero
 // @version      1.0
 // @description  Quickly move regions, set flag for new puppets
 // @author       Kractero
-// @match        https://www.nationstates.net/*
-// @downloadURL  https://github.com/Kractero/userscripts/raw/main/quickPuppetMover.user.js
-// @updateURL    https://github.com/Kractero/userscripts/raw/main/quickPuppetMover.user.js
-// @grant        none
+// @match        https://*.nationstates.net/*
+// @exclude      https://*.nationstates.net/page=deck/card=*
+// @downloadUrl  https://github.com/Kractero/ns-stuff/raw/master/quickPuppetMover.user.js
 // ==/UserScript==
 
 (function () {
   'use strict';
   document.addEventListener('keydown', (event) => {
-    if (window.location.href.includes('card')) return;
     if (event.key === '1') {
-      window.location.href =
-        'https://www.nationstates.net/region=Herta_space_station';
+      window.location.href = 'https://www.nationstates.net/region=herta_space_station';
     }
     if (event.key === '2' && window.location.href.includes('region')) {
       document.querySelector('.danger').click();
     }
-    if (event.key === '3') {
-      window.location.href = 'https://www.nationstates.net/page=settings';
-    }
-    if (event.key === '4') {
-      document.querySelector('a[href="page=upload_flag"]').click();
-    }
+
+    // change flag
     if (event.key === '5') {
-      document.getElementById('file').click();
+      window.location.href = 'https://www.nationstates.net/page=upload_flag';
     }
     if (event.key === '6') {
+      document.getElementById('file').click();
+    }
+    if (event.key === '7') {
       document.querySelector('.primary').click();
+    }
+
+    // disable recruitment
+    if (event.key === '3') {
+      window.location.href = 'https://www.nationstates.net/page=tgsettings';
+    }
+    if (event.key === '4') {
+      document.querySelector('table td input').click();
+      document.querySelector('#update_filter').click();
     }
   });
 })();
