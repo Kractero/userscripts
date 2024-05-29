@@ -9,8 +9,8 @@
 
 (function () {
     'use strict';
-    let error = document.querySelector(".error")
-    if (error) return;
+    if (document.querySelector(".error")) return;
+    if (!document.querySelector('.deck-loot-box')) return;
     const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
     const legendaries = Array.from(cards).map(card => {
         const check = card.querySelector('.deckcard-category');
@@ -19,7 +19,7 @@
             return card;
         }
     }).filter(card => card)
-    if (legendaries) {
+    if (legendaries.length > 0) {
         legendaries.forEach((card) => {
           const name = card.querySelector('.nname').textContent
           const check = card.querySelector('.deckcard-category');
@@ -43,7 +43,7 @@
             }
         }
     }).filter(card => card)
-    if (values) {
+    if (values.length > 0) {
         values.forEach((card) => {
           const name = card.querySelector('.nname').textContent
           const check = card.querySelector('.deckcard-category');
@@ -55,9 +55,9 @@
           speech.text = `You just pulled ${season} ${rarity} ${name}!`;
           speech.voice = speechSynthesis.getVoices()[0];
           window.speechSynthesis.speak(speech);
-      });;
+      });
     }
     if (legendaries.length === 0 && values.length === 0) {
         window.close();
     }
-})();
+  })();
