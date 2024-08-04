@@ -27,7 +27,13 @@
     );
     junks[currentJunk].style.border = 'thick solid #0000FF';
     window.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight') {
+      if (event.code === 'NumpadSubtract') {
+        window.close()
+      }
+      if (event.code === 'NumpadAdd') {
+        window.location.href = 'https://www.nationstates.net/page=deck'
+      }
+      if (event.code === 'Numpad6' || event.code === 'ArrowRight') {
         if (currentJunk === junks.length - 1) {
           return;
         }
@@ -42,7 +48,7 @@
           inline: 'center',
         });
       }
-      if (event.key === 'ArrowLeft') {
+      if (event.code === 'Numpad4' || event.code === 'ArrowLeft') {
         if (currentJunk === 0) {
           return;
         }
@@ -58,12 +64,12 @@
         });
       }
       if (!window.location.href.includes('card')) {
-        if (event.key === 'Shift') {
+        if (event.code === 'Numpad5' || event.code === 'ArrowDown') {
           junks[currentJunk].querySelector('.deckcard-junk-button').click();
         }
       }
       if (!window.location.href.includes('gift')) {
-        if (event.key === 'ArrowUp') {
+        if (event.code === 'Numpad8' || event.code === 'ArrowUp') {
           giftButtons[currentJunk].click();
         }
       }
