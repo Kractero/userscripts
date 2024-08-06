@@ -6,7 +6,7 @@
 // @match        https://*.nationstates.net/*
 // @downloadUrl  https://github.com/Kractero/userscripts/raw/scripts/quickJunker.user.js
 // @updateUrl    https://github.com/Kractero/userscripts/raw/scripts/quickJunker.user.js
-// @grant        none
+// @grant        window.close
 // ==/UserScript==
 
 (function () {
@@ -62,6 +62,10 @@
           block: 'center',
           inline: 'center',
         });
+      }
+      if (event.code === 'Numpad2' || event.code === 'Digit2') {
+        event.preventDefault();
+        document.querySelector("#entity_name").value = "Kractero"
       }
       if (!window.location.href.includes('card')) {
         if (event.code === 'Numpad5' || event.code === 'ArrowDown') {
