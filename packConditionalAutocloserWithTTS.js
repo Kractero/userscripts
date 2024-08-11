@@ -36,11 +36,24 @@
     const nonLegendaryCards = Array.from(cards).filter(card => !legendaries.includes(card));
     const values = Array.from(nonLegendaryCards).map(card => {
         const mv = card.querySelector('.deckcard-card-mv');
+        const askMv = card.querySelector('.deckcard-card-buyers');
         if (mv) {
             const marketValue = mv.textContent.split(': ')[1];
-            if (parseFloat(marketValue) > 1.5) {
+            if (askMv) {
+              const askValue = askMv.textContent.split(': ')[1];
+              if (parseFloat(marketValue) <= parseFloat(askValue)) {
                 return card;
-            }
+              };
+              // else {
+              //   if (parseFloat(marketValue) > 10) {
+              //     return card;
+              //   };
+              // };
+            } else {
+              if (parseFloat(marketValue) > 1.5) {
+                return card;
+              };
+            };
         }
     }).filter(card => card)
     if (values.length > 0) {
@@ -57,7 +70,17 @@
           window.speechSynthesis.speak(speech);
       });
     }
-    if (legendaries.length === 0 && values.length === 0) {
-        window.close();
-    }
-  })();
+
+  // Combine legendaries and values into a single set
+// const retainedCards = new Set([...legendaries, ...values]);
+
+// // Remove cards that are not in the retainedCards set
+// cards.forEach(card => {
+//     if (!retainedCards.has(card)) {
+//         card.remove();
+//     }
+// });
+    // if (legendaries.length === 0 && values.length === 0) {
+    //     window.close();
+    // }
+})();
