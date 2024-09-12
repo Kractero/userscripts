@@ -1,213 +1,213 @@
 // ==UserScript==
 // @name         Puppet Switcher
-// @namespace    Kra
 // @version      1.0
 // @description  Switch puppets
 // @author       Kractero
 // @match        https://www.nationstates.net/*
 // @downloadUrl  https://github.com/Kractero/userscripts/raw/master/puppetSwitcher.user.js
+// @require      https://unpkg.com/hotkeys-js/dist/hotkeys.min.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
 
+    const currentNation = document.querySelector('#loggedin').getAttribute('data-nname');
+    localStorage.setItem('currNation', currentNation);
+
     let itemsPerPage = localStorage.getItem('perPage') ? parseInt(localStorage.getItem('perPage')) : 25;
-    let currentNation = document.querySelector('#loggedin').getAttribute('data-nname')
-    localStorage.setItem('currNation', currentNation)
-    let list = localStorage.getItem("nationList") ? localStorage.getItem("nationList") : []
-    let dataArray = list.length > 0 ? list.split('\n') : [];
-    const totalPages = Math.ceil(dataArray.length / itemsPerPage);
-    let currentPage;
-    if (localStorage.getItem('page')) {
-        currentPage = localStorage.getItem('page');
-    } else {
-        currentPage = 1
+    let list = localStorage.getItem("nationList") ? localStorage.getItem("nationList").split('\n') : [];
+    const totalPages = Math.ceil(list.length / itemsPerPage);
+    let currentPage = localStorage.getItem('page') || 1;
+
+    const tab = createTab();
+    const form = createForm();
+    const outputDiv = createOutputDiv();
+    const buttonHolder = createButtonHolder();
+    const perPageInput = createPerPageInput();
+
+    const header = document.querySelector('.belspacermain') || document.querySelector('#banner');
+    header.style.position = 'relative';
+    header.appendChild(tab);
+
+    const tabs = createTabsContainer();
+    tabs.append(form, perPageInput, createEditButton(), buttonHolder, outputDiv);
+    tab.appendChild(tabs);
+
+    form.addEventListener('submit', saveData);
+    perPageInput.addEventListener('input', handlePerPageChange);
+
+    displayItems();
+
+    function createTab() {
+        const tab = document.createElement('div');
+        const nsHeaderText = document.createElement('a');
+        nsHeaderText.textContent = "Puppets";
+        tab.appendChild(nsHeaderText);
+
+        tab.addEventListener('mouseover', () => { tabs.style.display = 'flex'; });
+        tab.addEventListener('mouseleave', () => { tabs.style.display = 'none'; });
+
+        if (!document.querySelector('.belspacermain')) {
+            tab.style.right = "120px";
+            tab.id = "logoutbox";
+        } else {
+            tab.classList.add('bel');
+        }
+
+        return tab;
     }
 
-    let header = document.querySelector('.belspacermain')
-    const tab = document.createElement('div')
+    function createForm() {
+        const form = document.createElement('form');
+        form.style.display = list.length ? 'none' : 'flex';
+        form.style.flexDirection = 'column';
+        form.style.alignItems = 'center';
+        form.style.marginBottom = "1rem";
 
-    const tabs = document.createElement('div')
-    tabs.classList.add('former')
-    tabs.style.display = 'none';
-    tabs.style.flexDirection = 'column';
-    tabs.style.justifyItems = 'center';
-    tabs.style.alignItems = 'center';
-    tabs.style.position = 'absolute';
-    tabs.style.overflow = 'scroll'
-    tabs.style.right = 0
-    tabs.id = "loginbox"
-    tabs.style.width = "300px"
+        const textarea = document.createElement('textarea');
+        textarea.id = 'inputData';
+        textarea.required = true;
+        textarea.rows = '15';
 
-    let form = document.createElement('form');
+        const passwordInput = document.createElement('input');
+        passwordInput.id = 'password';
+        passwordInput.required = true;
 
-    let textarea = document.createElement('textarea');
-    textarea.id = 'inputData';
-    textarea.required = true;
-    textarea.rows = '15';
-    form.style.justifyItems = 'center'
-    if (list) {
-        form.style.display = 'none'
-    } else {
-        form.style.display = 'none'
+        const submitButton = document.createElement('button');
+        submitButton.textContent = 'Submit';
+        submitButton.style.width = '50%';
+
+        form.append(textarea, passwordInput, submitButton);
+        return form;
     }
-    form.style.flexDirection = 'column'
-    form.style.alignItems = 'center';
-    form.style.marginBottom = "1rem";
-    form.appendChild(textarea);
 
-    let input = document.createElement('input')
-    input.id = 'password'
-    input.required = true
+    function createOutputDiv() {
+        const outputDiv = document.createElement('div');
+        outputDiv.id = 'output';
+        outputDiv.style.display = 'flex';
+        outputDiv.style.flexDirection = 'column';
+        outputDiv.style.marginBottom = '1rem';
+        outputDiv.style.gap = '0.25rem';
 
-    form.appendChild(input);
+        list.forEach(item => {
+            const link = generateLinks(item);
+            outputDiv.appendChild(link);
+        });
 
-    let submitButton = document.createElement('button');
-    submitButton.textContent = 'Submit';
-    submitButton.style.width = '50%'
-    form.appendChild(submitButton);
+        return outputDiv;
+    }
 
-    let perPage = document.createElement('input');
-    perPage.style.width = "50px";
-    perPage.placeholder = itemsPerPage;
-    perPage.addEventListener('input', (e) => {
+    function createButtonHolder() {
+        const buttonHolder = document.createElement('div');
+
+        const previousButton = document.createElement('button');
+        previousButton.textContent = 'Previous';
+        previousButton.addEventListener('click', goToPreviousPage);
+
+        const nextButton = document.createElement('button');
+        nextButton.textContent = 'Next';
+        nextButton.addEventListener('click', goToNextPage);
+
+        buttonHolder.append(previousButton, nextButton);
+        return buttonHolder;
+    }
+
+    function createTabsContainer() {
+        const tabs = document.createElement('div');
+        tabs.classList.add('former');
+        tabs.style.display = 'none';
+        tabs.style.flexDirection = 'column';
+        tabs.style.alignItems = 'center';
+        tabs.style.position = 'absolute';
+        tabs.style.overflow = 'scroll';
+        tabs.style.right = '0';
+        tabs.style.width = '300px';
+        tabs.id = "loginbox";
+
+        return tabs;
+    }
+
+    function createPerPageInput() {
+        const perPageInput = document.createElement('input');
+        perPageInput.style.width = "50px";
+        perPageInput.placeholder = itemsPerPage;
+        return perPageInput;
+    }
+
+    function createEditButton() {
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit Storage';
+        editButton.addEventListener('click', () => {
+            form.style.display = 'flex';
+            document.getElementById('inputData').value = localStorage.getItem('nationList');
+            document.getElementById('password').value = localStorage.getItem('puppetPassword');
+            outputDiv.innerHTML = '';
+        });
+        return editButton;
+    }
+
+    function handlePerPageChange(e) {
         itemsPerPage = parseInt(e.target.value);
-        localStorage.setItem('perPage', itemsPerPage)
+        localStorage.setItem('perPage', itemsPerPage);
         displayItems();
-    })
-
-    let clearButton = document.createElement('button');
-    clearButton.textContent = 'Clear Storage';
-    clearButton.style.width = '50%'
-
-    let editButton = document.createElement('button');
-    editButton.textContent = 'Edit Storage';
-    editButton.style.width = '50%'
-
-    const previousButton = document.createElement('button');
-    previousButton.textContent = 'Previous';
-    previousButton.addEventListener('click', goToPreviousPage);
-
-    const nextButton = document.createElement('button');
-    nextButton.textContent = 'Next';
-    nextButton.addEventListener('click', goToNextPage);
-
-    let outputDiv = document.createElement('div');
-    outputDiv.id = 'output';
-    outputDiv.style.display = 'flex'
-    outputDiv.style.flexDirection = 'column'
-    outputDiv.style.marginBottom = '1rem'
-    outputDiv.style.gap = '0.25rem'
-
-    dataArray.forEach((item) => {
-        let link = generateLinks(item)
-        outputDiv.appendChild(link);
-    });
-
-    let buttonHolder = document.createElement('div')
-
-    let output = document.createElement('div')
-    output.style.marginTop = '1rem'
-
-    let managementButtons = document.createElement('div')
-    managementButtons.appendChild(clearButton)
-    managementButtons.appendChild(editButton)
-    managementButtons.style.display = 'flex'
-
-    let headerText = document.createElement('h1')
-    headerText.textContent = "Your Puppet Manager"
-    headerText.style.fontWeight = 500
-    headerText.style.fontSize = "1.875rem"
-    headerText.style.lineHeight = "2.25rem"
-    headerText.style.color = "white"
-    headerText.style.textShadow = "0px 0px 0px"
-
-    let nsHeaderText = document.createElement('a')
-    nsHeaderText.textContent = "Puppets"
-
-    buttonHolder.appendChild(previousButton);
-    buttonHolder.appendChild(nextButton);
-    output.appendChild(outputDiv)
-    output.appendChild(buttonHolder)
-    tabs.appendChild(headerText)
-    tabs.appendChild(form);
-    tabs.appendChild(perPage);
-    tabs.appendChild(managementButtons);
-    tabs.appendChild(output);
-    tab.appendChild(tabs)
-    tab.append(nsHeaderText)
-    tab.addEventListener('mouseover', () => { tabs.style.display = 'flex' })
-    tab.addEventListener('mouseleave', () => { tabs.style.display = 'none' })
-    if (!header) {
-        header = document.querySelector('#banner')
-        tab.style.right = "120px"
-        tab.id = "logoutbox"
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) return
-        header.prepend(tab)
-    } else {
-        header.appendChild(tab)
-        tab.classList.add('bel')
     }
-    header.style.position = 'relative'
 
-    function generateLinks(item) {
+    function generateLinks(nation) {
         const link = document.createElement('a');
-        let passy = localStorage.getItem('puppetPassword')
-        link.textContent = item
-        link.addEventListener('click', async () => {
-            const url = 'https://www.nationstates.net/?nspp-1';
-            const formData = new FormData();
-            formData.append('logging_in', '1');
-            formData.append('nation', item);
-            formData.append('password', passy);
-            formData.append('autologin', 'yes')
-            const response = await fetch(`${url}?script=PuppetSwitcher__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`, {
-                method: 'POST',
-                body: formData
-            })
-            window.location.href = response
-        })
-        link.style.fontSize = "1rem"
-        return link
+        link.textContent = nation;
+        link.style.fontSize = "1rem";
+        link.addEventListener('click', () => switchNation(nation));
+        return link;
+    }
+
+    async function switchNation(nation) {
+        const url = 'https://www.nationstates.net/?nspp-1';
+        const formData = new FormData();
+        formData.append('logging_in', '1');
+        formData.append('nation', nation);
+        formData.append('password', localStorage.getItem('puppetPassword'));
+        formData.append('autologin', 'yes');
+
+        const response = await fetch(`${url}?script=PuppetSwitcher__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        window.location.href = response.url;
     }
 
     async function saveData(event) {
         event.preventDefault();
         const inputData = document.getElementById('inputData').value;
-        const passy = document.getElementById('password').value;
-        localStorage.setItem("nationList", inputData)
-        localStorage.setItem("puppetPassword", passy)
-        list = localStorage.getItem("nationList")
-        if (list) {
-            dataArray = list.split('\n');
-            dataArray.forEach((item) => {
-                let link = generateLinks(item)
-                outputDiv.appendChild(link);
-            });
-            form.style.display = "none"
-            output.style.display = "block"
-            displayItems()
-        }
+        const password = document.getElementById('password').value;
+
+        localStorage.setItem("nationList", inputData);
+        localStorage.setItem("puppetPassword", password);
+
+        list = inputData.split('\n');
+        form.style.display = 'none';
+        displayItems();
     }
 
-    form.addEventListener('submit', (e) => { saveData(e) })
-
     function displayItems() {
-        outputDiv.innerHTML = '';
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        const itemsToDisplay = dataArray.slice(startIndex, endIndex);
-        itemsToDisplay.forEach((item) => {
-            let link = generateLinks(item);
-            outputDiv.appendChild(link);
+        const fragment = document.createDocumentFragment();
+
+        list.slice(startIndex, endIndex).forEach(item => {
+            const link = generateLinks(item);
+            fragment.appendChild(link);
         });
+
+        outputDiv.innerHTML = '';
+        outputDiv.appendChild(fragment);
     }
 
     function goToPreviousPage() {
         if (currentPage > 1) {
             currentPage--;
-            localStorage.setItem('page', currentPage)
+            localStorage.setItem('page', currentPage);
             displayItems();
         }
     }
@@ -215,72 +215,47 @@
     function goToNextPage() {
         if (currentPage < totalPages) {
             currentPage++;
-            localStorage.setItem('page', currentPage)
+            localStorage.setItem('page', currentPage);
             displayItems();
         }
     }
 
-    displayItems();
-
-    clearButton.addEventListener('click', () => {
-        localStorage.clear()
-        form.style.display = "flex"
-        outputDiv.innerHTML = ""
-        output.style.display = "none"
-    })
-
-    editButton.addEventListener('click', () => {
-        form.style.display = "flex"
-        list = localStorage.getItem("nationList")
-        document.getElementById('inputData').value = list
-        document.getElementById('password').value = localStorage.getItem('puppetPassword')
-        outputDiv.innerHTML = ""
-        output.style.display = "none"
-    })
-
-    function getCurrentPageIndex() {
-        let puppetPageLinks = Array.from(document.querySelectorAll('#output a'))
-        let puppetText = puppetPageLinks.map(puppet => puppet.textContent.replaceAll(' ', '_').toLowerCase())
-        const tests = puppetText.filter(puppet => puppet === localStorage.getItem('currNation'))
-        return puppetText.indexOf(tests[0]);
-    }
-
-    window.addEventListener('keydown', (event) => {
-        if (event.key === "Enter") {
-            const activeElement = document.activeElement;
-            if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) return
-            if (window.location.href.includes('upload_flag')) return
-            if (document.querySelector('.lootboxbutton')) {
-                document.querySelector('.lootboxbutton').click()
-                return
-            }
-            if (!window.location.href.includes('dilemmas')) window.location.href = "https://www.nationstates.net/page=dilemmas"
-            if (window.location.href.includes('dilemmas')) {
-                const issues = document.querySelectorAll('.dillistnpaper')
-                if (issues.length > 0) window.location.href = issues[0].getAttribute('href')
-            }
-        }
-        if (event.key === ";") {
-            let puppetPageLinks = Array.from(document.querySelectorAll('#output a'))
-            let currentPageIndex = getCurrentPageIndex()
-            if (currentPageIndex === 0) {
-                goToPreviousPage()
-                let puppetPageLinks = Array.from(outputDiv.querySelectorAll('#output a'))
-                puppetPageLinks[24].click()
-            } else {
-                puppetPageLinks[getCurrentPageIndex() - 1].click()
-            }
-        }
-        if (event.key === "'") {
-            let puppetPageLinks = Array.from(document.querySelectorAll('#output a'))
-            let currentPageIndex = getCurrentPageIndex()
-            if (currentPageIndex === 24) {
-                goToNextPage()
-                let puppetPageLinks = Array.from(outputDiv.querySelectorAll('#output a'))
-                puppetPageLinks[0].click()
-            } else {
-                puppetPageLinks[getCurrentPageIndex() + 1].click()
-            }
+    hotkeys('enter', (event) => {
+        event.preventDefault();
+        if (window.location.href.includes('upload_flag')) return;
+        const lootboxButton = document.querySelector('.lootboxbutton');
+        if (lootboxButton) {
+            lootboxButton.click();
+        } else {
+            window.location.href = "https://www.nationstates.net/page=dilemmas";
         }
     });
+
+    hotkeys('shift+;', (event) => {
+        event.preventDefault();
+        navigatePuppets(-1);
+    });
+
+    hotkeys(';', (event) => {
+        event.preventDefault();
+        navigatePuppets(1);
+    });
+
+    function navigatePuppets(direction) {
+        const puppetLinks = Array.from(document.querySelectorAll('#output a'));
+        const currentPageIndex = getCurrentPageIndex();
+        if ((direction === 1 && currentPageIndex === 24) || (direction === -1 && currentPageIndex === 0)) {
+            direction === 1 ? goToNextPage() : goToPreviousPage();
+            puppetLinks[0].click();
+        } else {
+            puppetLinks[currentPageIndex + direction].click();
+        }
+    }
+
+    function getCurrentPageIndex() {
+        const puppetPageLinks = Array.from(document.querySelectorAll('#output a'));
+        const puppetText = puppetPageLinks.map(puppet => puppet.textContent.replaceAll(' ', '_').toLowerCase());
+        const currentPuppet = puppetText.indexOf(localStorage.getItem('currNation'));
+        return currentPuppet >= 0 ? currentPuppet : 0;
+    }
 })();
