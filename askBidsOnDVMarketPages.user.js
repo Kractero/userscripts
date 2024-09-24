@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name        Ask/Bid on DV/Market Page
+// @namespace   Violentmonkey Scripts
 // @match       https://*.nationstates.net/*value_deck=1*
 // @match       https://*.nationstates.net/*show_market*
 // @grant       none
@@ -48,6 +49,7 @@
 
     if (hasAsk || hasBid) {
       const tdElement = element.closest('p')
+      if (!tdElement) return
       if (hasAsk) {
         tdElement.innerHTML += '<span class="deckcard-token" style="background-color: #FF7043">ASK</div>'
       }
