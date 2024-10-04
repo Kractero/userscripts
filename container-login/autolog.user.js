@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Auto Login Upload Flag
+// @name        Auto Login Helper
 // @namespace   Violentmonkey Scripts
 // @match       https://*.nationstates.net/*test=1*
 // @match       https://*.nationstates.net/
@@ -14,7 +14,7 @@
     if (enpass) {
         enpass.value = "";
         if (!enpass.value) {
-            alert("You need to set your password at line 15 of the Auto Login Upload Flag userscript")
+            alert("You need to set your password at line 15 of the Auto Login Helper (enpass.value) userscript")
             return;
         }
         let check = document.querySelectorAll('input[type="checkbox"]')[1];
