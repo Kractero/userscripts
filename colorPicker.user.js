@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Color Picker
-// @version      1.0
+// @version      1.1
 // @description  Rarities with color picker
 // @author       Kractero
 // @match        https://*.nationstates.net/*page=deck*
