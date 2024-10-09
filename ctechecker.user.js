@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  Grays out cte cards on load
 // @author       Kractero
-// @match        https://*.nationstates.net/page=deck*
+// @match        https://*.nationstates.net/*page=deck*
 // @grant        none
 // ==/UserScript==
 
