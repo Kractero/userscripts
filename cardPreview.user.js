@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.1
+// @version      1.2
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -22,6 +22,40 @@ button.setAttribute('id', 'submitButton')
 button.classList.add('button')
 button.textContent = 'Submit'
 
+const rarities = ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary'];
+
+const dropdown = document.createElement('select');
+const defaultOption = document.createElement('option');
+defaultOption.value = "";
+defaultOption.textContent = "Gacha Rarities";
+defaultOption.disabled = true;
+defaultOption.selected = true;
+dropdown.appendChild(defaultOption);
+
+rarities.forEach(rarity => {
+    const option = document.createElement('option');
+    option.value = rarity;
+    option.textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+    dropdown.appendChild(option);
+});
+
+function getSelectedRarity() {
+  const selectedRarity = dropdown.value;
+
+  if (!selectedRarity) {
+    return !window.location.href.includes('upload_flag')
+      ? window
+          .getComputedStyle(document.querySelector('.deckcard-category'), '::before')
+          .getPropertyValue('content')
+          .replace('"', '')
+          .replace(' ', '-')
+          .toLowerCase()
+      : ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary'][Math.floor(Math.random() * 6)];
+  }
+
+  return selectedRarity;
+}
+
 const contentDiv = document.createElement('div')
 
 if (window.location.href.includes('upload_flag')) {
@@ -29,6 +63,7 @@ if (window.location.href.includes('upload_flag')) {
   contentDiv.appendChild(input)
   contentDiv.appendChild(button)
   existingContentDiv.prepend(contentDiv)
+  contentDiv.appendChild(dropdown)
   const previewButton = document.createElement('button')
   previewButton.setAttribute('id', 'previewButton')
   previewButton.classList.add('button')
@@ -161,8 +196,6 @@ async function fetchData(preview) {
       })
       .filter(badge => badge)
 
-    const rarities = ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary']
-
     const numberOfDigits = population.length
     let formattedPopulation
     if (numberOfDigits >= 5) {
@@ -189,30 +222,9 @@ async function fetchData(preview) {
       econPrefix = `M`
     }
 
-    let s1rarity = !window.location.href.includes('upload_flag')
-      ? window
-          .getComputedStyle(document.querySelector('.deckcard-category'), '::before')
-          .getPropertyValue('content')
-          .replace('"', '')
-          .replace(' ', '-')
-          .toLowerCase()
-      : rarities[Math.floor(Math.random() * rarities.length)]
-    let s2rarity = !window.location.href.includes('upload_flag')
-      ? window
-          .getComputedStyle(document.querySelector('.deckcard-category'), '::before')
-          .getPropertyValue('content')
-          .replace('"', '')
-          .replace(' ', '-')
-          .toLowerCase()
-      : rarities[Math.floor(Math.random() * rarities.length)]
-    let s3rarity = !window.location.href.includes('upload_flag')
-      ? window
-          .getComputedStyle(document.querySelector('.deckcard-category'), '::before')
-          .getPropertyValue('content')
-          .replace('"', '')
-          .replace(' ', '-')
-          .toLowerCase()
-      : rarities[Math.floor(Math.random() * rarities.length)]
+    let s1rarity = getSelectedRarity();
+    let s2rarity = getSelectedRarity();
+    let s3rarity = getSelectedRarity();
 
     const hachteeml = `
         <div class="deckcard-container">
