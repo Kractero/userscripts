@@ -95,8 +95,9 @@
   form.append(input, passwordInput, submit)
   form.addEventListener('submit', e => {
     e.preventDefault()
-    localStorage.setItem('puppetList', input.value)
-    puppetList = localStorage.getItem('puppetList')
+    console.log(input.value)
+    localStorage.setItem('nationList', input.value)
+    puppetList = localStorage.getItem('nationList')
     dataArray = puppetList.split('\n')
     dataArray.forEach(item => {
       let link = generateLinks(item)
