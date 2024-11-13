@@ -102,7 +102,7 @@
       let link = generateLinks(item)
       outputDiv.appendChild(link)
     })
-    const password = document.getElementById('password').value
+    const password = passwordInput.value;
     localStorage.setItem('puppetPassword', password)
     outputDiv.classList.toggle('show')
     form.classList.toggle('show')
@@ -112,7 +112,6 @@
   const editButton = document.createElement('button')
   editButton.textContent = 'Edit Storage'
   editButton.addEventListener('click', () => {
-    document.getElementById('password').value = localStorage.getItem('puppetPassword')
     outputDiv.classList.toggle('show')
     form.classList.toggle('show')
   })
