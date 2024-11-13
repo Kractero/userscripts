@@ -95,7 +95,6 @@
   form.append(input, passwordInput, submit)
   form.addEventListener('submit', e => {
     e.preventDefault()
-    console.log(input.value)
     localStorage.setItem('nationList', input.value)
     puppetList = localStorage.getItem('nationList')
     dataArray = puppetList.split('\n')
