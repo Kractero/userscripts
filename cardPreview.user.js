@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.2
+// @version      1.3
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -126,11 +126,7 @@ async function fetchData(preview) {
     const nationDocument = new DOMParser().parseFromString(nationHTML, 'text/html')
 
     let nationName = nationDocument.querySelector('.newtitlename a')
-    if (nationName) {
-      nationName = nationName.textContent
-    } else {
-      throw new Error('Invalid nation')
-    }
+    if (!nationName) return
 
     const nationApiResponse = await fetch(
       `https://www.nationstates.net/cgi-bin/api.cgi?nation=${
@@ -164,15 +160,23 @@ async function fetchData(preview) {
     const ccbadges = nationDocument.querySelector('#wabadges a')
     const cc = {}
     if (ccbadges) {
-      ;(ccbadges.link = ccbadges.href),
-        (ccbadges.img = ccbadges.querySelector('img').getAttribute('src').replace('.svg', '.png')),
-        (ccbadges.title = ccbadges.querySelector('img').getAttribute('title'))
+      ;(cc.link = ccbadges.href),
+        (cc.img = ccbadges.querySelector('img').getAttribute('src').replace('.svg', '.png')),
+        (cc.title = ccbadges.querySelector('img').getAttribute('title'))
+    }
+
+    const badgeMap = {
+      "WA Member": "WA",
+      "WA Delegate": "Delegate",
+      "Game Moderator": "Game Mod",
+      "Game Administrator": "Admin",
+      "Issues Editor": "Editor"
     }
 
     const badges = Array.from(nationDocument.querySelectorAll('#badge_rack .badge div')).map(badge => {
       return {
         class: badge.classList[0],
-        name: badge.textContent,
+        name: badgeMap[badge.textContent.trim()] ? badgeMap[badge.textContent.trim()] : badge.textContent,
         icon: badge.querySelector('i'),
       }
     })
@@ -225,11 +229,12 @@ async function fetchData(preview) {
     let s1rarity = getSelectedRarity();
     let s2rarity = getSelectedRarity();
     let s3rarity = getSelectedRarity();
+    let s4rarity = getSelectedRarity();
 
     const hachteeml = `
         <div class="deckcard-container">
             <div class="deckcard deckcard-season-1" data-cardid="1" data-season="1">
-                <figure class="front deckcard-category-${s1rarity}">
+                <figure class="front deckcard-category-${s4rarity}">
                     <div class="deckcard-flag"
                         style="background-image:url(${flag}); height: 180px;">
                         <div class="deckcard-info">
@@ -630,6 +635,7 @@ async function fetchData(preview) {
             }
             #cards {
                 display: flex;
+                flex-wrap: wrap;
             }
             .deckcard-season-1 {
                 overflow: hidden;
