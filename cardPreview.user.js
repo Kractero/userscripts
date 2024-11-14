@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.3
+// @version      1.4
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -79,7 +79,7 @@ if (window.location.href.includes('upload_flag')) {
   buttonDiv.style.display = 'flex'
   buttonDiv.style.justifyContent = 'center'
   buttonDiv.appendChild(button)
-  existingContentDiv.insertBefore(buttonDiv, document.querySelector('.minorinfo'))
+  existingContentDiv.insertBefore(buttonDiv, document.querySelector('#deck-single-card').nextSibling)
 }
 
 const stylesheet = document.createElement('link')
@@ -624,7 +624,7 @@ async function fetchData(preview) {
       existingContentDiv.insertBefore(cards, contentDiv.nextSibling)
     } else {
       cards.style.justifyContent = 'center'
-      existingContentDiv.insertBefore(cards, document.querySelector('.minorinfo'))
+      existingContentDiv.insertBefore(cards, document.querySelector('#deck-single-card').nextSibling)
     }
 
     const stylistic = document.createElement('style')
