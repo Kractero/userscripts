@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Card Preview
-// @version      1.0
+// @name         Card Preview Lite
+// @version      1.1
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
