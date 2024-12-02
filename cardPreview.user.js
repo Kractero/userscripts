@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.5
+// @version      1.6
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -251,7 +251,7 @@ async function fetchData(preview) {
 
     let waMembership
     if (wa) {
-      waMembership = badgeMap[wa] ? badgeMap[wa] : wa
+      waMembership = badgeMap[wa] ? badgeMap[wa] : ''
     }
 
     const scales = Array.from(census.querySelectorAll('SCALE')).filter(scale => scale.querySelector('RANK').textContent)
@@ -334,12 +334,15 @@ async function fetchData(preview) {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                              <div class="badge">
-                                  <div class="wa_status">
-                                      <i class="icon-wa"></i>
-                                      ${waMembership}
-                                  </div>
-                              </div>
+                              ${
+                                waMembership
+                                  ? `<div class="badge">
+                                      <div class="wa_status">
+                                        <i class="icon-wa"></i>${waMembership}
+                                      </div>
+                                    </div>`
+                                  : ''
+                              }
                             </div>
                             ${
                               cc && cc.link
