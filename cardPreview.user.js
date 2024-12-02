@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.4
+// @version      1.5
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -22,25 +22,25 @@ button.setAttribute('id', 'submitButton')
 button.classList.add('button')
 button.textContent = 'Submit'
 
-const rarities = ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary'];
+const rarities = ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary']
 
-const dropdown = document.createElement('select');
-const defaultOption = document.createElement('option');
-defaultOption.value = "";
-defaultOption.textContent = "Gacha Rarities";
-defaultOption.disabled = true;
-defaultOption.selected = true;
-dropdown.appendChild(defaultOption);
+const dropdown = document.createElement('select')
+const defaultOption = document.createElement('option')
+defaultOption.value = ''
+defaultOption.textContent = 'Gacha Rarities'
+defaultOption.disabled = true
+defaultOption.selected = true
+dropdown.appendChild(defaultOption)
 
 rarities.forEach(rarity => {
-    const option = document.createElement('option');
-    option.value = rarity;
-    option.textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1);
-    dropdown.appendChild(option);
-});
+  const option = document.createElement('option')
+  option.value = rarity
+  option.textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1)
+  dropdown.appendChild(option)
+})
 
 function getSelectedRarity() {
-  const selectedRarity = dropdown.value;
+  const selectedRarity = dropdown.value
 
   if (!selectedRarity) {
     return !window.location.href.includes('upload_flag')
@@ -50,10 +50,10 @@ function getSelectedRarity() {
           .replace('"', '')
           .replace(' ', '-')
           .toLowerCase()
-      : ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary'][Math.floor(Math.random() * 6)];
+      : ['common', 'uncommon', 'rare', 'ultra-rare', 'epic', 'legendary'][Math.floor(Math.random() * 6)]
   }
 
-  return selectedRarity;
+  return selectedRarity
 }
 
 const contentDiv = document.createElement('div')
@@ -106,6 +106,98 @@ const validBadges = [
   'Site Supporter',
 ]
 
+const trophyValues = [
+  'LIBERAL',
+  'ECONOMY',
+  'POLIFREE',
+  'POPULATION',
+  'WEALTHGAPS',
+  'DEATH',
+  'COMPASSIONATE',
+  'ECO-GOVT',
+  'CONSERVATIVE',
+  'NUDE',
+  'AUTO',
+  'CHEESE',
+  'BASKET',
+  'TECH',
+  'PIZZA',
+  'FISH',
+  'ARMS',
+  'AGRICULTURE',
+  'SODA',
+  'TIMBER',
+  'MINING',
+  'INSURANCE',
+  'FURNITURE',
+  'RETAIL',
+  'PUBLISHING',
+  'GAMBLING',
+  'MANUFACTURING',
+  'GOVT',
+  'WELFARE',
+  'HEALTHCARE',
+  'POLICE',
+  'BUSINESS',
+  'DEVOUT',
+  'EQUALITY',
+  'NICE',
+  'RUDE',
+  'SMART',
+  'STUPID',
+  'APATHETIC',
+  'HEALTHY',
+  'HAPPY',
+  'WEATHER',
+  'LOWCRIME',
+  'SAFE',
+  'LIFE',
+  'EXTREME',
+  'DEFENSE',
+  'PEACE',
+  'PRO-MARKET',
+  'HIGHTAX',
+  'LOWTAX',
+  'CORRUPT',
+  'LEASTCORRUPT',
+  'AUTHORITARIAN',
+  'REBELYOUTH',
+  'CULTURE',
+  'EMPLOYED',
+  'PUBLICTRANSPORT',
+  'TOURISM',
+  'ARMED',
+  'DRUGS',
+  'FAT',
+  'GODFORSAKEN',
+  'ENVIRONMENT',
+  'AVOIDED',
+  'INFLUENCE',
+  'ENDORSED',
+  'AVERAGE',
+  'HDI',
+  'PRIMITIVE',
+  'ADVANCED',
+  'INCLUSIVE',
+  'INCOME',
+  'POORINCOME',
+  'RICHINCOME',
+  'EDUCATED',
+  'GDP',
+  'CRIME',
+  'AID',
+  'BLACKMARKET',
+  'STATIONARY',
+  'survivors',
+  'zombies',
+  'dead',
+  'percentage zombies',
+  'DISPINCOME',
+  'DECK',
+  'PATRIOTISM',
+  'FOODQUALITY',
+]
+
 async function fetchData(preview) {
   try {
     let nation = document.querySelector('#loggedin')
@@ -113,29 +205,11 @@ async function fetchData(preview) {
       return
     }
     nation = nation.getAttribute('data-nname')
-    const nationResponse = await fetch(
-      `https://www.nationstates.net/nation=${
-        input.value
-          ? input.value
-          : document.querySelector('.nname')
-          ? document.querySelector('.nname').textContent
-          : nation
-      }?script=CardPreview__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`
-    )
-    const nationHTML = await nationResponse.text()
-    const nationDocument = new DOMParser().parseFromString(nationHTML, 'text/html')
-
-    let nationName = nationDocument.querySelector('.newtitlename a')
-    if (!nationName) return
 
     const nationApiResponse = await fetch(
       `https://www.nationstates.net/cgi-bin/api.cgi?nation=${
-        input.value
-          ? input.value
-          : document.querySelector('.nname')
-          ? document.querySelector('.nname').textContent
-          : nation
-      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region&userAgent=CardPreview by Kractero usedBy ${nation}`,
+        input.value ? input.value : nation
+      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region+wabadges+wa+census;scale=all;mode=rank+prank&userAgent=CardPreview by Kractero usedBy ${nation}`,
       {
         headers: {
           'User-Agent': `CardPreview by Kractero usedBy ${nation}`,
@@ -156,49 +230,51 @@ async function fetchData(preview) {
     const gdp = nationXmlDoc.querySelector('GDP').textContent
     const notable = nationXmlDoc.querySelector('NOTABLE').textContent
     const region = nationXmlDoc.querySelector('REGION').textContent
+    const ccbadges = nationXmlDoc.querySelector('WABADGES')
+    const wa = nationXmlDoc.querySelector('UNSTATUS').textContent
+    const census = nationXmlDoc.querySelector('CENSUS')
 
-    const ccbadges = nationDocument.querySelector('#wabadges a')
     const cc = {}
     if (ccbadges) {
-      ;(cc.link = ccbadges.href),
-        (cc.img = ccbadges.querySelector('img').getAttribute('src').replace('.svg', '.png')),
-        (cc.title = ccbadges.querySelector('img').getAttribute('title'))
+      Array.from(ccbadges.querySelectorAll('WABADGE')).forEach(ccbadge => {
+        const type = ccbadge.getAttribute('type')
+        cc.img = `https://www.nationstates.net/images/${type}.png`
+        cc.link = `page=WA_past_resolution/id=${ccbadge.textContent}/council=2`
+        cc.title = `${name} was ${type}ed by Security Council Resolution # ${ccbadge.textContent}"`
+      })
     }
 
     const badgeMap = {
-      "WA Member": "WA",
-      "WA Delegate": "Delegate",
-      "Game Moderator": "Game Mod",
-      "Game Administrator": "Admin",
-      "Issues Editor": "Editor"
+      'WA Member': 'WA',
+      'WA Delegate': 'Delegate',
     }
 
-    const badges = Array.from(nationDocument.querySelectorAll('#badge_rack .badge div')).map(badge => {
+    let waMembership
+    if (wa) {
+      waMembership = badgeMap[wa] ? badgeMap[wa] : wa
+    }
+
+    const scales = Array.from(census.querySelectorAll('SCALE')).filter(scale => scale.querySelector('RANK').textContent)
+
+    const sortedScales = scales
+      .sort((a, b) => {
+        const rankA = parseInt(a.querySelector('RANK').textContent)
+        const rankB = parseInt(b.querySelector('RANK').textContent)
+        return rankA - rankB
+      })
+      .slice(0, 3)
+
+    const top3trophies = sortedScales.map(scale => {
+      const id = parseInt(scale.getAttribute('id'))
+      const rank = parseFloat(scale.querySelector('RANK').textContent)
+      const prank = parseFloat(scale.querySelector('PRANK').textContent)
+      const badgeSuffix = prank <= 1.0 ? '-1' : prank <= 5.0 ? '-5' : prank <= 10.0 ? '-10' : '-unknown'
       return {
-        class: badge.classList[0],
-        name: badgeMap[badge.textContent.trim()] ? badgeMap[badge.textContent.trim()] : badge.textContent,
-        icon: badge.querySelector('i'),
+        img: `https://www.nationstates.net/images/trophies/${trophyValues[id].toLowerCase()}${badgeSuffix}.png`,
+        link: `https://www.nationstates.net/nation=${name}/detail=trend/censusid=${id}`,
+        text: `${trophyValues[id]} - ${rank}`,
       }
     })
-    const trophiesCabinet = Array.from(nationDocument.querySelectorAll('#trophycabinet a'))
-    const trophies = Array.from(nationDocument.querySelectorAll('.trophyrack > img'))
-
-    const top3trophies = trophiesCabinet.slice(0, 3).map(trophy => ({
-      img: trophy.querySelector('img').getAttribute('src'),
-      text: trophy.querySelector('img').getAttribute('title'),
-      link: trophy.href,
-    }))
-
-    const mainBadges = trophies
-      .map(trophy => {
-        const title = trophy.getAttribute('title')
-        const src = trophy.getAttribute('src')
-        return {
-          title: validBadges.includes(title) || title.includes('Easter Egg') ? title : null,
-          src: src,
-        }
-      })
-      .filter(badge => badge)
 
     const numberOfDigits = population.length
     let formattedPopulation
@@ -226,10 +302,10 @@ async function fetchData(preview) {
       econPrefix = `M`
     }
 
-    let s1rarity = getSelectedRarity();
-    let s2rarity = getSelectedRarity();
-    let s3rarity = getSelectedRarity();
-    let s4rarity = getSelectedRarity();
+    let s1rarity = getSelectedRarity()
+    let s2rarity = getSelectedRarity()
+    let s3rarity = getSelectedRarity()
+    let s4rarity = getSelectedRarity()
 
     const hachteeml = `
         <div class="deckcard-container">
@@ -258,18 +334,12 @@ async function fetchData(preview) {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                                ${badges
-                                  .map(badge => {
-                                    return `
-                                            <div class="badge">
-                                                <div class="${badge.class}">
-                                                    ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ''}
-                                                    ${badge.name}
-                                                </div>
-                                            </div>
-                                        `
-                                  })
-                                  .join('')}
+                              <div class="badge">
+                                  <div class="wa_status">
+                                      <i class="icon-wa"></i>
+                                      ${waMembership}
+                                  </div>
+                              </div>
                             </div>
                             ${
                               cc && cc.link
@@ -286,23 +356,16 @@ async function fetchData(preview) {
                                 : ''
                             }
                             <div class="specialbadges">
-                                ${mainBadges
-                                  .map(badge => {
-                                    return `
-                                            <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                  })
-                                  .join('')}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
                                   .map(trophy => {
                                     return `
-                                            <a href="${trophy.link}">
-                                                <img
-                                                src="${trophy.img}" class="trophy"
-                                                alt="${trophy.text}" title="${trophy.text}">
-                                            </a>
+                                          <a href="${trophy.link}">
+                                              <img
+                                              src="${trophy.img}" class="trophy"
+                                              alt="${trophy.text}" title="${trophy.text}">
+                                          </a>
                                         `
                                   })
                                   .join('')}
@@ -346,18 +409,12 @@ async function fetchData(preview) {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                                ${badges
-                                  .map(badge => {
-                                    return `
-                                            <div class="badge">
-                                                <div class="${badge.class}">
-                                                    ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ''}
-                                                    ${badge.name}
-                                                </div>
-                                            </div>
-                                        `
-                                  })
-                                  .join('')}
+                              <div class="badge">
+                                  <div class="wa_status">
+                                      <i class="icon-wa"></i>
+                                      ${waMembership}
+                                  </div>
+                              </div>
                             </div>
                             ${
                               cc && cc.link
@@ -374,13 +431,6 @@ async function fetchData(preview) {
                                 : ''
                             }
                             <div class="specialbadges">
-                                ${mainBadges
-                                  .map(badge => {
-                                    return `
-                                            <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                  })
-                                  .join('')}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
@@ -434,18 +484,12 @@ async function fetchData(preview) {
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
                             <div>
-                                ${badges
-                                  .map(badge => {
-                                    return `
-                                            <div class="badge">
-                                                <div class="${badge.class}">
-                                                    ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ''}
-                                                    ${badge.name}
-                                                </div>
-                                            </div>
-                                        `
-                                  })
-                                  .join('')}
+                              <div class="badge">
+                                  <div class="wa_status">
+                                      <i class="icon-wa"></i>
+                                      ${waMembership}
+                                  </div>
+                              </div>
                             </div>
                             ${
                               cc && cc.link
@@ -462,13 +506,6 @@ async function fetchData(preview) {
                                 : ''
                             }
                             <div class="specialbadges">
-                                ${mainBadges
-                                  .map(badge => {
-                                    return `
-                                            <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                  })
-                                  .join('')}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
@@ -540,28 +577,15 @@ async function fetchData(preview) {
                             : ''
                         }
                         <div class="role-badges">
-                            ${badges
-                              .map(badge => {
-                                return `
-                                        <div class="badge">
-                                            <div class="${badge.class}">
-                                                ${badge.icon ? `<i class="${badge.icon.classList[0]}"></i>` : ''}
-                                                ${badge.name}
-                                            </div>
-                                        </div>
-                                    `
-                              })
-                              .join('')}
+                          <div class="badge">
+                              <div class="wa_status">
+                                  <i class="icon-wa"></i>
+                                  ${waMembership}
+                              </div>
+                          </div>
                         </div>
                         <div class="trophies">
                             <div class="specialbadges">
-                                ${mainBadges
-                                  .map(badge => {
-                                    return `
-                                            <img src="${badge.src}" class="trophy" title="${badge.title}">
-                                        `
-                                  })
-                                  .join('')}
                             </div>
                             <div id="trophycabinet">
                                 ${top3trophies
