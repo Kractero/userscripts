@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview Lite
-// @version      1.3
+// @version      1.4
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -269,12 +269,12 @@ async function fetchData(preview) {
       const rank = parseFloat(scale.querySelector('RANK').textContent)
       const prank = parseFloat(scale.querySelector('PRANK').textContent)
       const badgeSuffix = prank <= 1.0 ? '-1' : prank <= 5.0 ? '-5' : prank <= 10.0 ? '-10' : '-unknown'
-      return {
+      return badgeSuffix !== '-unknown' ? {
         img: `https://www.nationstates.net/images/trophies/${trophyValues[id].toLowerCase()}${badgeSuffix}.png`,
         link: `https://www.nationstates.net/nation=${name}/detail=trend/censusid=${id}`,
         text: `${trophyValues[id]} - ${rank}`,
-      }
-    })
+      } : undefined
+    }).filter(scale => scale)
 
     const numberOfDigits = population.length
     let formattedPopulation
