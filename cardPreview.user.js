@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.7
+// @version      1.8
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -72,6 +72,13 @@ if (window.location.href.includes('upload_flag')) {
     fetchData(document.querySelector('#previewimage').getAttribute('src'))
   })
   document.querySelector('fieldset').appendChild(previewButton)
+  const stylesheet = document.createElement('link')
+
+  stylesheet.rel = 'stylesheet'
+  stylesheet.type = 'text/css'
+  stylesheet.href = 'https://www.nationstates.net/deck_v1735614921.css'
+
+  document.head.appendChild(stylesheet)
 } else {
   const buttonDiv = document.createElement('div')
   buttonDiv.setAttribute('id', 'center')
@@ -82,16 +89,8 @@ if (window.location.href.includes('upload_flag')) {
   existingContentDiv.insertBefore(buttonDiv, document.querySelector('#deck-single-card').nextSibling)
 }
 
-const stylesheet = document.createElement('link')
-
-stylesheet.rel = 'stylesheet'
-stylesheet.type = 'text/css'
-stylesheet.href = 'https://www.nationstates.net/deck_v1669164404.css'
-
 const cards = document.createElement('div')
 cards.id = 'cards'
-
-document.head.appendChild(stylesheet)
 
 const validBadges = [
   'Founder',
@@ -209,7 +208,7 @@ async function fetchData(preview) {
     const nationApiResponse = await fetch(
       `https://www.nationstates.net/cgi-bin/api.cgi?nation=${
         input.value ? input.value : nation
-      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region+wabadges+wa+census;scale=all;mode=rank+prank&userAgent=CardPreview by Kractero usedBy ${nation}`,
+      }&q=name+dbid+notable+gdp+population+flag+category+motto+demonym2plural+type+region+banner+wabadges+wa+census;scale=all;mode=rank+prank&userAgent=CardPreview by Kractero usedBy ${nation}`,
       {
         headers: {
           'User-Agent': `CardPreview by Kractero usedBy ${nation}`,
@@ -223,6 +222,7 @@ async function fetchData(preview) {
     const dbid = nationXmlDoc.querySelector('DBID').textContent
     const type = nationXmlDoc.querySelector('TYPE').textContent
     const motto = nationXmlDoc.querySelector('MOTTO').textContent
+    const banner = nationXmlDoc.querySelector('BANNER').textContent
     const category = nationXmlDoc.querySelector('CATEGORY').textContent
     const population = nationXmlDoc.querySelector('POPULATION').textContent
     let flag = preview || nationXmlDoc.querySelector('FLAG').textContent.trim()
@@ -250,7 +250,7 @@ async function fetchData(preview) {
     }
 
     let waMembership
-    if (wa) {
+    if (wa !== 'Non-member') {
       waMembership = badgeMap[wa] ? badgeMap[wa] : ''
     }
 
@@ -308,42 +308,46 @@ async function fetchData(preview) {
     let s4rarity = getSelectedRarity()
 
     const hachteeml = `
-        <div class="deckcard-container">
-            <div class="deckcard deckcard-season-1" data-cardid="1" data-season="1">
-                <figure class="front deckcard-category-${s4rarity}">
-                    <div class="deckcard-flag"
-                        style="background-image:url(${flag}); height: 180px;">
-                        <div class="deckcard-info">
-                            <div class="deckcard-info-content">
-                                <div class="deckcard-info-cardnumber"><a href="/page=deck/card=${dbid}/season=1">#1</a></div>
-                                <div class="deckcard-info-cardlink"><a href="/page=deck/card=${dbid}/season=1">Info</a></div>
-                                <div class="deckcard-info-cardbuttons">
-                                    <a href="#" class="button deckcard-junk-button danger " data-junkprice="1.00"
-                                        data-rarity="${s1rarity}" data-cardid="1" data-season="1">Junk</a>
-                                    <a href="/page=deck/card=${dbid}/season=1/gift=1" class="button ">Gift</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="deckcard-category"></div>
-                    <div class="deckcard-title"><a href="nation=${name}" class="nlink nameblock"><span
-                                class="nnameblock"><span class="ntype">The ${type} of</span> <span
-                                    class="nname">${name}</span></span></a></div>
-                    <div class="deckcard-lower">
-                        <div class="deckcard-govt">${category}</div>
-                        <div class="deckcard-slogan">“${motto}”</div>
-                        <div class="deckcard-badges">
-                            <div>
-                              ${
-                                waMembership
-                                  ? `<div class="badge">
-                                      <div class="wa_status">
-                                        <i class="icon-wa"></i>${waMembership}
-                                      </div>
-                                    </div>`
-                                  : ''
-                              }
-                            </div>
+      <div class="deckcard-container" style="border: thick solid rgb(0, 0, 255);">
+          <div class="deckcard deckcard-season-4 " data-cardid="${dbid}" data-season="4">
+          <figure class="front deckcard-category-${s4rarity}">
+              <div class="s4-card ${s4rarity}">
+            <div class="top">
+              <header style="background-image: linear-gradient(0deg, var(--${s4rarity}-main), var(--${s4rarity}-main)), linear-gradient(0deg, var(--${s4rarity}-dark), var(--${s4rarity}-dark)), url(/images/banners/uploads/hare_testing_nation_480109.jpg);">
+                <span class="bold rarity">${s4rarity}</span>
+                  <div class="rarity-indicator"><div class="rarity-indicator-block"></div><div class="rarity-indicator-block empty"></div><div class="rarity-indicator-block empty"></div><div class="rarity-indicator-block empty"></div><div class="rarity-indicator-block empty"></div><div class="rarity-indicator-block empty"></div></div>
+              </header>
+              <main class="flag" style="background-image: url(${flag}), linear-gradient(0deg, var(--${s4rarity}-b1), var(--${s4rarity}-b1))">
+
+
+          <div class="deckcard-info">
+           <div class="deckcard-info-content">
+            <div class="deckcard-info-cardnumber"><a href="/page=deck/card=${dbid}/season=4">#${dbid} /4</a></div>
+            <div class="deckcard-info-cardlink"><a href="/page=deck/card=${dbid}/season=4">Info</a></div>
+            <div class="deckcard-info-cardbuttons">
+             <a href="#" class="button deckcard-junk-button danger disabled" data-junkprice="0.01" data-rarity="${s4rarity}" data-cardid="${dbid}" data-season="4">Junk</a>
+             <a href="/page=deck/card=${dbid}/season=4/gift=1" class="button disabled">Gift</a>
+           </div>
+           </div>
+          </div>
+
+
+                <span class="pretitle">The ${type} of</span>
+              </main>
+            </div>
+            <div class="bottom" style="background-image: url(/images/banners/${banner}.jpg), linear-gradient(0deg, var(--common-dark), var(--common-dark))">
+              <main>
+                <div class="s4-card-wrapper">
+                  <a href="/nation=hare_testing_nation" class="title rces-was-parsed">${name}</a>
+                  <div class="deckcard-badges">
+                            ${waMembership ? `<div>
+                              <div class="badge">
+                                  <div class="wa_status">
+                                      <i class="icon-wa"></i>
+                                      ${waMembership}
+                                  </div>
+                              </div>
+                            </div>` : ''}
                             ${
                               cc && cc.link
                                 ? `<div>
@@ -360,44 +364,68 @@ async function fetchData(preview) {
                             }
                             <div class="specialbadges">
                             </div>
-                            <div id="trophycabinet">
-                                ${top3trophies
-                                  .map(trophy => {
-                                    return `
-                                          <a href="${trophy.link}">
-                                              <img
-                                              src="${trophy.img}" class="trophy"
-                                              alt="${trophy.text}" title="${trophy.text}">
-                                          </a>
-                                        `
-                                  })
-                                  .join('')}
-                            </div>
-                        </div>
-                        <div class="deckcard-desc">${formattedPopulation} ${demonym}. ${
-      notable.charAt(0).toUpperCase() + notable.slice(1)
-    }</div>
+                  </div>
+                </div>
+                <div class="motto-box">
+                  <span class="motto">
+                    ${motto}
+                  </span>
+                </div>
+                <div class="deckcard-season-4-wrapper">
+                  <div class="trophies-section">
+                    <div id="trophycabinet">
+                      ${top3trophies
+                        .map(trophy => {
+                          return `
+                                <a href="${trophy.link}">
+                                    <img
+                                    src="${trophy.img}" class="trophy"
+                                    alt="${trophy.text}" title="${trophy.text}">
+                                </a>
+                              `
+                        })
+                        .join('')}
                     </div>
-                    <div class="deckcard-stripe">
-                        <div class="deckcard-season">SEASON ONE</div>
-                        <div class="deckcard-region"><a href="region=${region}" class="rlink">${region}</a></div>
-                    </div>
-                </figure>
-                <figure class="back"></figure>
+                  </div>
+                  <div class="lower-info">
+                    <span class="population">
+                      ${formattedPopulation.slice(
+                          0,
+                          4
+                        )}<span class="pop-units">b</span><i class="icon-male"></i>
+                    </span>
+                    <span class="category">
+                     ${category}
+                    </span>
+                    <span class="gdp">
+                      ${gdp.slice(0, 5)}<span
+                                    class="pop-units">${econPrefix}</span><span class="pop-units">t</span><i class="icon-industrial-building"></i>
+                    </span>
+                  </div>
+                </div>
+              </main>
+              <footer style="background-image: linear-gradient(0deg, var(--${s4rarity}-main), var(--${s4rarity}-main)), linear-gradient(0deg, var(--${s4rarity}-dark), var(--${s4rarity}-dark)), url(/images/banners/uploads/hare_testing_nation_480109.jpg);">
+                <span class="">SEASON FOUR</span>
+                <a href="region=${region}" class="rlink">${region}</a>
+              </footer>
             </div>
-        </div>
+          </div>
+           </figure>
+           <figure class="back"></figure>
+           </div>
+         </div>
         <div class="deckcard-container">
-            <div class="deckcard deckcard-season-1 " data-cardid="1" data-season="1">
+            <div class="deckcard deckcard-season-1 " data-cardid="${dbid}" data-season="1">
                 <figure class="front deckcard-category-${s1rarity}">
                     <div class="deckcard-flag"
                         style="background-image:url(${flag})">
                         <div class="deckcard-info">
                             <div class="deckcard-info-content">
-                                <div class="deckcard-info-cardnumber"><a href="/page=deck/card=${dbid}/season=1">#1</a></div>
+                                <div class="deckcard-info-cardnumber"><a href="/page=deck/card=${dbid}/season=1">${dbid}</a></div>
                                 <div class="deckcard-info-cardlink"><a href="/page=deck/card=${dbid}/season=1">Info</a></div>
                                 <div class="deckcard-info-cardbuttons">
                                     <a href="#" class="button deckcard-junk-button danger " data-junkprice="1.00"
-                                        data-rarity="${s1rarity}" data-cardid="1" data-season="1">Junk</a>
+                                        data-rarity="${s1rarity}" data-cardid="${dbid}" data-season="1">Junk</a>
                                     <a href="/page=deck/card=${dbid}/season=1/gift=1" class="button ">Gift</a>
                                 </div>
                             </div>
@@ -411,14 +439,14 @@ async function fetchData(preview) {
                         <div class="deckcard-govt">${category}</div>
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
-                            <div>
+                            ${waMembership ? `<div>
                               <div class="badge">
                                   <div class="wa_status">
                                       <i class="icon-wa"></i>
                                       ${waMembership}
                                   </div>
                               </div>
-                            </div>
+                            </div>` : ''}
                             ${
                               cc && cc.link
                                 ? `<div>
@@ -486,14 +514,14 @@ async function fetchData(preview) {
                         <div class="deckcard-govt">${category}</div>
                         <div class="deckcard-slogan">“${motto}”</div>
                         <div class="deckcard-badges">
-                            <div>
+                            ${waMembership ? `<div>
                               <div class="badge">
                                   <div class="wa_status">
                                       <i class="icon-wa"></i>
                                       ${waMembership}
                                   </div>
                               </div>
-                            </div>
+                            </div>` : ''}
                             ${
                               cc && cc.link
                                 ? `<div>
@@ -580,12 +608,14 @@ async function fetchData(preview) {
                             : ''
                         }
                         <div class="role-badges">
-                          <div class="badge">
-                              <div class="wa_status">
-                                  <i class="icon-wa"></i>
-                                  ${waMembership}
+                            ${waMembership ? `<div>
+                              <div class="badge">
+                                  <div class="wa_status">
+                                      <i class="icon-wa"></i>
+                                      ${waMembership}
+                                  </div>
                               </div>
-                          </div>
+                            </div>` : ''}
                         </div>
                         <div class="trophies">
                             <div class="specialbadges">
