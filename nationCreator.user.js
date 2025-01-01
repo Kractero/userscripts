@@ -9,7 +9,9 @@
 (function () {
     'use strict';
     if (document.querySelector('#content input[type="submit"]')) {
-        const nation = decodeURIComponent(window.location.href.substring(window.location.href.lastIndexOf('=') + 1));
+        const position = window.location.href.indexOf('nation=') + 7;
+
+        const nation = decodeURIComponent(window.location.href.substring(position, window.location.href.indexOf('/', position)));
         localStorage.setItem('createNation', nation);
         document.querySelector('#content input[type="submit"]').focus()
         return
