@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.8
+// @version      1.9
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
@@ -308,7 +308,7 @@ async function fetchData(preview) {
     let s4rarity = getSelectedRarity()
 
     const hachteeml = `
-      <div class="deckcard-container" style="border: thick solid rgb(0, 0, 255);">
+      <div class="deckcard-container">
           <div class="deckcard deckcard-season-4 " data-cardid="${dbid}" data-season="4">
           <figure class="front deckcard-category-${s4rarity}">
               <div class="s4-card ${s4rarity}">
