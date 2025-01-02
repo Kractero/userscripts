@@ -99,9 +99,9 @@
     });
 
     const videoUrls = {
-        legendary: 'https://raw.githubusercontent.com/Kractero/userscripts/master/packopening/5star-single.mp4',
-        highValue: 'https://raw.githubusercontent.com/Kractero/userscripts/master/packopening/4star-single.mp4',
-        default: 'https://raw.githubusercontent.com/Kractero/userscripts/master/packopening/3star-single.mp4',
+        legendary: 'https://raw.githubusercontent.com/Kractero/userscripts/main/packopening/5star-single.mp4',
+        highValue: 'https://raw.githubusercontent.com/Kractero/userscripts/main/packopening/4star-single.mp4',
+        default: 'https://raw.githubusercontent.com/Kractero/userscripts/main/packopening/3star-single.mp4',
     };
 
     const videoContainer = document.createElement('div');
