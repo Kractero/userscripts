@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Nation Creator
-// @version      1.1
+// @version      1.2
 // @description  Quickly Found Nations
 // @author       Kractero
 // @match        https://*.nationstates.net/*page=create_nation*
@@ -9,7 +9,7 @@
 (function () {
     'use strict';
     if (document.querySelector('#content input[type="submit"]')) {
-        const split = window.location.href.split('?')
+        const split = window.location.href.split('?')[0]
         const nation = decodeURIComponent(split.substring(split.lastIndexOf('=') + 1));
         localStorage.setItem('createNation', nation);
         document.querySelector('#content input[type="submit"]').focus()
