@@ -20,7 +20,7 @@
         } else {
           rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content').replaceAll('"', '').toLowerCase()
         }
-        if (rarity === 'common') {
+        if (rarity === 'legendary') {
             return card;
         }
     }).filter(card => card)
