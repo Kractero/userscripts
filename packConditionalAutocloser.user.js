@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser
-// @version      1.0
+// @version      1.1
 // @description  Autoclose packs that don't contain legendaries or cards over certain market value.
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck/nation=*
@@ -13,9 +13,15 @@
     if (error) return;
     const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
     const legendaries = Array.from(cards).map(card => {
-        const check = card.querySelector('.deckcard-category');
-        const rarity = getComputedStyle(check, ':before').getPropertyValue('content');
-        if (rarity === '"LEGENDARY"') {
+        const season = card.querySelector('.deckcard').getAttribute('data-season')
+        let rarity;
+        if (season === '4') {
+            rarity = card.querySelector('.rarity').textContent
+        } else {
+            // as a note to self, this is done in case junkButton.dataset is overrode somewhere
+            rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content');
+        }
+        if (rarity === 'legendary') {
             return card;
         }
     }).filter(card => card);

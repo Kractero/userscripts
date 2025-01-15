@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser with Notification
-// @version      1.0
+// @version      1.1
 // @description  Autoclose packs unless conditions are met, and makes legendary cards bigger and spin and play sound effect to notify
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck*
@@ -19,12 +19,16 @@
   valuesfx.src = 'https://ucarecdn.com/c4a98ab4-d71a-4c59-914c-06190281d30d/';
   const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
   const rarities = Array.from(cards).map((card) => {
-    const check = card.querySelector('.deckcard-category');
-    const rarity = getComputedStyle(check, ':before').getPropertyValue(
-      'content'
-    );
-    if (rarity === '"LEGENDARY"') {
-      return card;
+    const season = card.querySelector('.deckcard').getAttribute('data-season')
+    let rarity;
+    if (season === '4') {
+        rarity = card.querySelector('.rarity').textContent
+    } else {
+        // as a note to self, this is done in case junkButton.dataset is overrode somewhere
+        rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content');
+    }
+    if (rarity === 'legendary') {
+        return card;
     }
   });
   const nonLegendaryCards = Array.from(cards).filter(

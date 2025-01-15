@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Autocloser with Webhook
-// @version      1.0
+// @version      1.1
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck/nation=*
 // @grant        window.close
@@ -13,14 +13,25 @@
   const nonLegValue = 1.50;
   let error = document.querySelector(".error")
   if (error) return;
+  const nationName = document.querySelector('.quietlink').textContent
   const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
+  function canonicalize(str) {
+    return str.trim().replace(/\s+/g, '_').toLowerCase();
+  }  
   for (let i = 0; i < cards.length; i++) {
       let legFound = false;
-      const check = cards[i].querySelector('.deckcard-category');
-      const rarity = getComputedStyle(check, ':before').getPropertyValue(
-          'content'
-      );
-      if (rarity === '"LEGENDARY"') {
+      const season = card.querySelector('.deckcard').getAttribute('data-season')
+      let rarity;
+      let name;
+      if (season === '4') {
+          rarity = card.querySelector('.rarity').textContent
+          name = card.querySelector('.title').textContent  
+      } else {
+          // as a note to self, this is done in case junkButton.dataset is overrode somewhere
+          rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content');
+          name = card.querySelector('.nname').textContent
+      }
+      if (rarity === 'legendary') {
           await fetch(WEBHOOK_URL, {
               "method": "POST",
               "headers": {
@@ -33,7 +44,7 @@
                   embeds: [
                       {
                           title: 'Miner',
-                          description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}!`,
+                          description: `[${nationName}](https://www.nationstates.net/container=${canonicalize(nationName)}/nation=${canonicalize(nationName)}/page=deck/value_deck=1) has just found Season ${season} ${rarity} ${name}!`,
                       },
                   ],
               })
@@ -57,7 +68,7 @@
                           embeds: [
                               {
                                   title: 'Miner',
-                                  description: `[${document.querySelector('.quietlink').textContent}](https://www.nationstates.net/container=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/nation=${document.querySelector('.quietlink').textContent.replaceAll(' ', '_').toLowerCase()}/page=deck/value_deck=1) has just found ${cards[i].querySelector('.deckcard-season').textContent} ${rarity} ${cards[i].querySelector('.nname').textContent}, with ${marketValue} value!`,
+                                  description: `[${nationName}](https://www.nationstates.net/container=${canonicalize(nationName)}/nation=${canonicalize(nationName)}/page=deck/value_deck=1) has just found Season ${season} ${rarity} ${name}, with ${marketValue} value!`,
                               },
                           ],
                       })
