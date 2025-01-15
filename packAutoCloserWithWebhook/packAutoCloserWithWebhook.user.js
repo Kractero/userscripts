@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Autocloser with Webhook
-// @version      1.1
+// @version      1.2
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck/nation=*
 // @grant        window.close
@@ -13,6 +13,7 @@
   const nonLegValue = 1.50;
   let error = document.querySelector(".error")
   if (error) return;
+  if (!document.querySelector('.deck-loot-box')) return;
   const nationName = document.querySelector('.quietlink').textContent
   const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
   function canonicalize(str) {
