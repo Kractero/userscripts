@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Autocloser with Webhook
-// @version      1.2
+// @version      1.3
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck/nation=*
 // @grant        window.close
@@ -18,15 +18,16 @@
   const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
   function canonicalize(str) {
     return str.trim().replace(/\s+/g, '_').toLowerCase();
-  }  
+  }
   for (let i = 0; i < cards.length; i++) {
+      const card = cards[i]
       let legFound = false;
       const season = card.querySelector('.deckcard').getAttribute('data-season')
       let rarity;
       let name;
       if (season === '4') {
           rarity = card.querySelector('.rarity').textContent
-          name = card.querySelector('.title').textContent  
+          name = card.querySelector('.title').textContent
       } else {
           // as a note to self, this is done in case junkButton.dataset is overrode somewhere
           rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content');
