@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Conditional TTS
-// @version      1.2
+// @version      1.3
 // @description  Autoclose packs that don't contain legendaries or cards over certain market value with TTS voice.
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck*
@@ -12,9 +12,9 @@
     if (document.querySelector(".error")) return;
     if (!document.querySelector('.deck-loot-box')) return;
     const cards = document.querySelectorAll('.deck-loot-box .deckcard');
+    const season = cards[0].querySelector('.deckcard').getAttribute('data-season')
     const legendaries = Array.from(cards).map(card => {
         let rarity
-        const season = card.querySelector('.deckcard').getAttribute('data-season')
         if (season === '4') {
           rarity = card.querySelector('.rarity').textContent
         } else {
@@ -27,7 +27,6 @@
     if (legendaries.length > 0) {
         legendaries.forEach((card) => {
           let name;
-          const season = card.querySelector('.deckcard').getAttribute('data-season')
           if (season === '4') {
             name = card.querySelector('.title').textContent
           } else {
@@ -71,7 +70,6 @@
     if (values.length > 0) {
         values.forEach((card) => {
           let name;
-          const season = card.querySelector('.deckcard').getAttribute('data-season')
           if (season === '4') {
             name = card.querySelector('.title').textContent
           } else {
@@ -83,7 +81,6 @@
           } else {
             rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content').replaceAll('"', '').toLowerCase()
           }
-          const season = card.querySelector('.deckcard-season').textContent
           const speech = new SpeechSynthesisUtterance();
           speech.text = `You just pulled ${season} ${rarity} ${name}!`;
           speech.voice = speechSynthesis.getVoices()[0];
