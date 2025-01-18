@@ -12,9 +12,9 @@
     if (document.querySelector(".error")) return;
     if (!document.querySelector('.deck-loot-box')) return;
     const cards = document.querySelectorAll('.deck-loot-box .deckcard');
-    const season = cards[0].getAttribute('data-season')
     const legendaries = Array.from(cards).map(card => {
         let rarity
+        const season = card.querySelector('.deckcard').getAttribute('data-season')
         if (season === '4') {
           rarity = card.querySelector('.rarity').textContent
         } else {
@@ -27,6 +27,7 @@
     if (legendaries.length > 0) {
         legendaries.forEach((card) => {
           let name;
+          const season = card.querySelector('.deckcard').getAttribute('data-season')
           if (season === '4') {
             name = card.querySelector('.title').textContent
           } else {
@@ -70,6 +71,7 @@
     if (values.length > 0) {
         values.forEach((card) => {
           let name;
+          const season = card.querySelector('.deckcard').getAttribute('data-season')
           if (season === '4') {
             name = card.querySelector('.title').textContent
           } else {
