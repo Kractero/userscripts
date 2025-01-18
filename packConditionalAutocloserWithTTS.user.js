@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Conditional TTS
-// @version      1.1
+// @version      1.2
 // @description  Autoclose packs that don't contain legendaries or cards over certain market value with TTS voice.
 // @author       Kractero
 // @match        https://*.nationstates.net/page=deck*
