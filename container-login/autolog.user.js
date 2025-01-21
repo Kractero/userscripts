@@ -4,12 +4,12 @@
 // @match       https://*.nationstates.net/*test=1*
 // @match       https://*.nationstates.net/
 // @grant       window.close
-// @version     1.0
+// @version     1.1
 // @author      Kractero
 // ==/UserScript==
 (function () {
     'use strict';
-    if (!document.getElementById('page_login')) return
+    if (!document.getElementById('page_login')) window.close()
     let enpass = document.querySelectorAll('input[type="password"]')[1];
     if (enpass) {
         enpass.value = "";
