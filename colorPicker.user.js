@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Color Picker
-// @version      1.1
+// @version      1.2
 // @description  Rarities with color picker
 // @author       Kractero
 // @match        https://*.nationstates.net/*page=deck*
@@ -296,6 +296,57 @@ function GM_addStyle(style) {
       .deckcard-season-2 .deckcard-category {
       background: 0 0;
       }
+
+      /* S4 */
+      :root {
+        --legendary-main: rgba(${hexToRgb(legendaryColor)}, 1);
+        --legendary-dark: rgba(${hexToRgb(generateShadowColor(legendaryColor), 1)});
+        --legendary-backdrop: rgba(${hexToRgb(generateShadowColor(legendaryColor), 1)}, 0.5);
+
+        --epic-main: rgba(${hexToRgb(epicColor)}, 1);
+        --epic-dark: rgba(${hexToRgb(generateShadowColor(epicColor), 1)});
+        --epic-backdrop: rgba(${hexToRgb(generateShadowColor(epicColor), 1)}, 0.5);
+
+        --ultra-rare-main: rgba(${hexToRgb(ultraRareColor)}, 1);
+        --ultra-rare-dark: rgba(${hexToRgb(generateShadowColor(ultraRareColor), 1)});
+        --ultra-rare-backdrop: rgba(${hexToRgb(generateShadowColor(ultraRareColor), 1)}, 0.5);
+
+        --rare-main: rgba(${hexToRgb(rareColor)}, 1);
+        --rare-dark: rgba(${hexToRgb(generateShadowColor(rareColor), 1)});
+        --rare-backdrop: rgba(${hexToRgb(generateShadowColor(rareColor), 1)}, 0.5);
+
+        --uncommon-main: rgba(${hexToRgb(uncommonColor)}, 1);
+        --uncommon-dark: rgba(${hexToRgb(generateShadowColor(uncommonColor), 1)});
+        --uncommon-backdrop: rgba(${hexToRgb(generateShadowColor(uncommonColor), 1)}, 0.5);
+
+        --common-main: rgba(${hexToRgb(commonColor)}, 1);
+        --common-dark: rgba(${hexToRgb(generateShadowColor(commonColor), 1)});
+        --common-backdrop: rgba(${hexToRgb(generateShadowColor(commonColor), 1)}, 0.5);
+      }
+
+      .s4-card.legendary a.title {
+        color: var(--legendary-b1);
+      }
+
+      .s4-card.epic a.title {
+        color: var(--epic-b1);
+      }
+
+      .s4-card.ultra-rare a.title {
+        color: var(--ultra-rare-b1);
+      }
+
+      .s4-card.rare a.title {
+        color: var(--rare-b1);
+      }
+
+      .s4-card.uncommon a.title {
+        color: var(--uncommon-b1);
+      }
+
+      .s4-card.common a.title {
+        color: var(--common-b1);
+      }
     `)
   }
 
@@ -389,9 +440,55 @@ function GM_addStyle(style) {
     return `#${rgbToHex(r)}${rgbToHex(g)}${rgbToHex(b)}`
   }
 
+  function rgbToHsl(r, g, b) {
+      r /= 255, g /= 255, b /= 255;
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+          h = s = 0;
+      } else {
+          let d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+              case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+              case g: h = (b - r) / d + 2; break;
+              case b: h = (r - g) / d + 4; break;
+          }
+          h *= 60;
+      }
+      return { h, s: s * 100, l: l * 100 };
+  }
+
+  function hslToRgb(h, s, l) {
+      s /= 100, l /= 100;
+      let c = (1 - Math.abs(2 * l - 1)) * s;
+      let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      let m = l - c / 2;
+      let [r, g, b] = (h < 60) ? [c, x, 0] :
+                      (h < 120) ? [x, c, 0] :
+                      (h < 180) ? [0, c, x] :
+                      (h < 240) ? [0, x, c] :
+                      (h < 300) ? [x, 0, c] : [c, 0, x];
+      return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+  }
+
   function getAdjustedColor(hex) {
     let hsl = hexToHsl(hex)
     hsl.l = Math.min(hsl.l + 20, 100)
     return hslToHex(hsl.h, hsl.s, hsl.l)
+  }
+
+  function generateShadowColor(hex) {
+      let [r, g, b] = hex.match(/\w\w/g).map(c => parseInt(c, 16));
+
+      let { h, s, l } = rgbToHsl(r, g, b);
+
+      let shadowL = Math.max(l * 0.25, 10);
+      let shadowS = Math.max(s * 0.9, 15);
+
+      let [newR, newG, newB] = hslToRgb(h, shadowS, shadowL);
+
+      return `#${((1 << 24) | (newR << 16) | (newG << 8) | newB).toString(16).slice(1)}`;
   }
 })()
