@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         NsIssueCompactorRandMod
-// @version      1.0
+// @version      1.01
 // @description  NsIssueCompactorRand but it text to speeches or plays audio when finding an iframe
 // @author       Kractero
 // @noframes
@@ -45,6 +45,7 @@
         if (iframe) {
             // observer.disconnect();
             // notifier.play();
+            document.removeEventListener('keyup', keyupListener)
             if (window.location.href.includes('template-overall=none')) {
                 setTimeout(() => {
                   document.addEventListener("keyup", (e) => keyupListener2(e, chosenButtonNumber));
