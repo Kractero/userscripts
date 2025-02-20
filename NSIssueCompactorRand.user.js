@@ -29,14 +29,27 @@
         document.removeEventListener('keyup', keyupListener)
     };
 
+    let keyupListener2 = function (ev) {
+        if (ev.key === "Enter") {
+            let newUrl = window.location.href.replace(/&?template-overall=none/, '');
+            window.location.href = `${newUrl}&userclick=${Date.now()}`;
+            document.removeEventListener('keyup', keyupListener2)
+        }
+    }
+
     function checkForIframe(observer) {
         const iframe = document.querySelector('iframe');
         // let notifier = document.createElement('audio');
         // notifier.volume = 0.3
-        // notifier.src = ''
+        // notifier.src = '';
         if (iframe) {
             // observer.disconnect();
             // notifier.play();
+            if (window.location.href.includes('template-overall=none')) {
+                setTimeout(() => {
+                  document.addEventListener("keyup", (e) => keyupListener2(e, chosenButtonNumber));
+                }, 1000);
+            }
             const speech = new SpeechSynthesisUtterance();
             speech.text = `Recaptcha found`;
             speech.voice = speechSynthesis.getVoices()[0];
