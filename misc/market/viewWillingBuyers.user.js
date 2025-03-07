@@ -18,9 +18,6 @@
         const cardPriceBuy = Number(cardPriceBuyElement.textContent.trim())
         const bidValue = Number(cardPriceBuyElement.closest('td').nextElementSibling.textContent)
         if (cardPriceBuy >= bidValue * 0.8) {
-          console.log(ele)
-          console.log(cardPriceBuy)
-          console.log(bidValue)
           ele.style.backgroundColor = 'blue'
         } else {
           ele.parentElement.remove()

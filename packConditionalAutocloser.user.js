@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser
-// @version      1.1
+// @version      1.2
 // @description  Autoclose packs that don't contain legendaries or cards over certain market value.
 // @author       Kractero
-// @match        https://*.nationstates.net/page=deck/nation=*
+// @match        https://*.nationstates.net/*page=deck*
 // @grant        none
 // ==/UserScript==
 

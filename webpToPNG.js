@@ -54,7 +54,6 @@
                 const dataTransfer = new DataTransfer()
                 dataTransfer.items.add(new File([blob], file.name.replace(/\.webp$/i, '.png'), { type: 'image/png' }))
                 input.files = dataTransfer.files
-                console.log('Replaced WebP files with PNG equivalents.');
                 return
             } catch (error) {
                 console.error(`Error converting file: ${file.name}`, error);

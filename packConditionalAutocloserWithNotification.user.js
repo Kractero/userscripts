@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser with Notification
-// @version      1.1
+// @version      1.2
 // @description  Autoclose packs unless conditions are met, and makes legendary cards bigger and spin and play sound effect to notify
 // @author       Kractero
-// @match        https://*.nationstates.net/page=deck*
+// @match        https://*.nationstates.net/*page=deck*
 // @downloadURL  https://github.com/Kractero/userscripts/raw/main/legendaryNotify.user.js
 // @updateURL    https://github.com/Kractero/userscripts/raw/main/legendaryNotify.user.js
 // @grant        window.close
