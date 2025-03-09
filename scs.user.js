@@ -30,6 +30,11 @@ function handler() {
   let switchNation = false
 
   if (url.href.includes('generated_by=Hare')) {
+    // stop what youre doing on cloudflare inspection boxes
+    if (document.querySelector('.cf_inspection_box')) {
+      return
+    }
+    
     // if the nation is logged in (on a non template_none page),
     // but the nation doesn't match the one in the url, switch
     if (document.querySelector('#loggedin')) {
@@ -46,7 +51,8 @@ function handler() {
     // 1) you already junked the card and don't own it anymore
     // 2) you are on the wrong nation
     // This will assume the second, switch
-    if (url.href.toLowerCase().includes('junkdajunk') && Number(document.body.textContent) === 0) {
+    // Another potential outcome is that you aren't logged into any nation, this will result in 'Whoops, you are logged out!'
+    if (url.href.toLowerCase().includes('junkdajunk') && (Number(document.body.textContent) === 0 || document.body.textContent.includes('Whoops'))) {
       switchNation = true
     } else if (url.href.toLowerCase().includes('junkdajunk') && !url.href.toLowerCase().includes('jdj=view')) {
       window.close()
