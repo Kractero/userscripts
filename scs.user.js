@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.9
+// @version     1.10
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -33,6 +33,11 @@ function handler() {
     // stop what youre doing on cloudflare inspection boxes
     if (document.querySelector('.cf_inspection_box')) {
       return
+    }
+
+    // if loggedout is present
+    if (document.querySelector('#loggedout')) {
+      switchNation = true
     }
     
     // if the nation is logged in (on a non template_none page),
