@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.10
+// @version     1.11
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -32,6 +32,11 @@ function handler() {
   if (url.href.includes('generated_by=Hare')) {
     // stop what youre doing on cloudflare inspection boxes
     if (document.querySelector('.cf_inspection_box')) {
+      return
+    }
+
+    // terminate on creator
+    if (window.location.href.includes('Creator')) {
       return
     }
 
