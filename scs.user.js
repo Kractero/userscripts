@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.11
+// @version     1.12
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -53,17 +53,24 @@ function handler() {
         switchNation = true
       }
     }
+    
     // if the url contains gotIssues (for gotIssues) and no issue, switch
     if (url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) {
       switchNation = true
     }
+    
     // if the url contains junkdajunk and junk value is zero, there are two reasons:
     // 1) you already junked the card and don't own it anymore
     // 2) you are on the wrong nation
-    // This will assume the second, switch
     // Another potential outcome is that you aren't logged into any nation, this will result in 'Whoops, you are logged out!'
     if (url.href.toLowerCase().includes('junkdajunk') && (Number(document.body.textContent) === 0 || document.body.textContent.includes('Whoops'))) {
       switchNation = true
+      // double checks against the logged nation in local storage
+      // if it matches the one in the url, a 0 is assumed to be that you no longer have the card and the page is closed
+      if (localStorage.getItem("currentNation") === nation) {
+        window.close()
+        return
+      }
     } else if (url.href.toLowerCase().includes('junkdajunk') && !url.href.toLowerCase().includes('jdj=view')) {
       window.close()
     }
