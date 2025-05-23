@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.12
+// @version     1.13
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -81,6 +81,7 @@ function handler() {
       notice.id = 'switching'
       notice.style.display = 'none'
       document.body.appendChild(notice)
+      localStorage.setItem("currentNation", nation)
 
       if (document.getElementById('loginbox')) {
         document.querySelector('#loginbox').style.display = 'block'
