@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Card Keybinds
-// @version      1.0
+// @version      1.1
 // @description  Keybinds using hotkeys-js
 // @author       Kractero
 // @noframes
@@ -17,7 +17,6 @@
   ;('use strict')
 
   const inputs = document.querySelectorAll('input.auctionbid[name="auction_ask"], input.auctionbid[name="auction_bid"]')
-  //let ask_match = document.querySelector('#highest_matchable_ask_price > .cardprice_sell')
   let ask_match = document.querySelectorAll('.cardauctionunmatchedrow-bid .cardprice')[
     document.querySelectorAll('.cardauctionunmatchedrow-bid .cardprice').length - 1
   ]
@@ -25,6 +24,7 @@
   let mv_match = document.querySelector('.deckcard-card-stats tr:nth-child(6) td:last-child')
   ask_match = ask_match ? ask_match.textContent : 0
   bid_match = bid_match ? bid_match.textContent : 0
+  mv_match = mv_match ? mv_match.textContent : 0
 
   hotkeys(`s,shift+s`, function (event, handler) {
     event.preventDefault()
@@ -39,7 +39,7 @@
   hotkeys(`b`, function (event, handler) {
     event.preventDefault()
     document.querySelector('th[data-mode="buy"').click()
-    if (bid_match && bid_match > 0) {
+    if (mv_match && mv_match > 0) {
       document.querySelector('input.auctionbid[name="auction_bid"]').value = mv_match
     }
     const bidbox = document.querySelector('input.auctionbid[name="auction_bid"]')
@@ -123,7 +123,7 @@
 
   let currentCard = 0
   const giftButtons = document.querySelectorAll('.deckcard-info-cardbuttons :not(.deckcard-junk-button)')
-  cards[currentCard].style.border = 'thick solid #0000FF'
+  cards[currentCard].style.border = 'thick solid #FFFFFF'
   const highlightCurrentCard = () => {
     cards.forEach(junk => (junk.style.border = ''))
     cards[currentCard].style.border = 'thick solid #0000FF'
@@ -133,6 +133,7 @@
   hotkeys(`l,right,num_6`, function (event, handler) {
     event.preventDefault()
     if (currentCard < cards.length - 1) {
+      cards[currentCard+1]
       currentCard += 1
       highlightCurrentCard()
     }
@@ -163,6 +164,7 @@
       }
       while (!junkButton && currentCard < cards.length - 1) {
         currentCard += 1
+        highlightCurrentCard()
         junkButton = cards[currentCard]?.querySelector('.deckcard-junk-button')
       }
     }
@@ -176,15 +178,25 @@
       document.querySelector('input[name="entity_name"').focus()
     } else {
       const default_name = 'Kractero'
-      const card = document.querySelector('.deckcard-container')
-      const rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content')
+      const card = document.querySelector('.deckcard-container .deckcard')
+      const season = card.getAttribute('data-season')
+      const region = card.querySelector('.rlink')?.textContent
+      let rarity
+      if (season === '4') {
+        rarity = card.querySelector('.rarity').textContent
+      } else {
+        rarity = getComputedStyle(card.querySelector('.deckcard-category'), ':before').getPropertyValue('content').replaceAll('"', '').toLowerCase()
+      }
 
-      if (rarity === '"LEGENDARY"') document.querySelector('input[name="entity_name"').value = 'Kractero'
-      if (rarity === '"EPIC"') document.querySelector('input[name="entity_name"').value = 'TB Type L'
-      if (rarity === '"ULTRA RARE"') document.querySelector('input[name="entity_name"').value = 'TB Type S'
-      if (rarity === '"RARE"') document.querySelector('input[name="entity_name"').value = 'TB Type A'
-      if (rarity === '"UNCOMMON"') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
-      if (rarity === '"COMMON"') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
+      const mv = document.querySelector('.shiny > tbody:nth-child(1) > tr:nth-child(6) > td:nth-child(2)').textContent
+      if (rarity === 'epic') document.querySelector('input[name="entity_name"').value = 'TB Type L'
+      if (rarity === 'ultra rare') document.querySelector('input[name="entity_name"').value = 'TB Type S'
+      if (rarity === 'rare') document.querySelector('input[name="entity_name"').value = 'TB Type A'
+      if (rarity === 'uncommon') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
+      if (rarity === 'common') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
+      if (Number(mv) >= 10) document.querySelector('input[name="entity_name"').value = 'Qingque'
+      if (region === "Herta Space Station") document.querySelector('input[name="entity_name"').value = 'Kractero'
+      if (rarity === 'legendary') document.querySelector('input[name="entity_name"').value = 'Kractero'
       document.getElementsByName('send_gift')[0].focus()
     }
   }
@@ -197,6 +209,8 @@
         const newTab = window.open(url, '_blank')
       } else {
         cards[currentCard].querySelector('.deckcard-info-cardbuttons :not(.deckcard-junk-button)').click()
+        // const url = cards[currentCard].querySelector('.deckcard-info-cardlink a').getAttribute('href')
+        // const newTab = window.open(url, '_blank')
       }
     }
   })
@@ -212,7 +226,15 @@
   hotkeys(`3,num_3`, function (event, handler) {
     event.preventDefault()
     if (window.location.href.indexOf('/gift=1') > -1) {
-      document.getElementById('entity_name').value = '9001'
+      document.getElementById('entity_name').value = 'Qingque'
+      document.getElementsByName('send_gift')[0].focus()
+    }
+  })
+
+  hotkeys(`4,num_4`, function (event, handler) {
+    event.preventDefault()
+    if (window.location.href.indexOf('/gift=1') > -1) {
+      document.getElementById('entity_name').value = 'Genius Society'
       document.getElementsByName('send_gift')[0].focus()
     }
   })
