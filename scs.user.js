@@ -29,8 +29,8 @@ if (puppetsPasswords) {
   })
 }
 
-if (!ua || !password) {
-  alert('Set UA or password in the userscript')
+if (!ua) {
+  alert('Set UA in the userscript')
   return
 }
 
