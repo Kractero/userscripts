@@ -2,13 +2,32 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.13
+// @version     1.14
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
 
 const ua = ''
 const password = ''
+
+/*
+  Multi-password: Provide it by replacing the text within the ` with your username,password.
+  You can provide the above password as a fallback.
+*/
+const puppetsPasswords = `
+a,b
+c,d
+`.trim()
+
+let puppetStruct = {}
+if (puppetsPasswords) {
+  puppetsPasswords.split('\n').forEach(combo => {
+    const [username, password] = combo.split(',').map(s => s.trim())
+    if (username && password) {
+      puppetStruct[username] = password 
+    }
+  })
+}
 
 if (!ua || !password) {
   alert('Set UA or password in the userscript')
@@ -86,7 +105,12 @@ function handler() {
       if (document.getElementById('loginbox')) {
         document.querySelector('#loginbox').style.display = 'block'
         document.querySelector('#loginbox > form input[name=nation]').value = nation
-        document.querySelector('#loginbox > form input[name=password]').value = password
+        const resolvedPassword = puppetStruct[nation] || password
+        if (!resolvedPassword) {
+          alert('Set password in the userscript!')
+          return
+        }
+        document.querySelector('#loginbox > form input[name=password]').value = resolvedPassword
 
         document.addEventListener('keyup', function onKeyUp(event) {
           if (event.key === 'Enter') {
@@ -114,7 +138,12 @@ function handler() {
         const passwordInput = document.createElement('input')
         passwordInput.name = 'password'
         passwordInput.type = 'password'
-        passwordInput.value = password
+        const resolvedPassword = puppetStruct[nation] || password
+        if (!resolvedPassword) {
+          alert('Set password in the userscript!')
+          return
+        }
+        passwordInput.value = resolvedPassword
 
         const submitButton = document.createElement('button')
         submitButton.type = 'submit'
