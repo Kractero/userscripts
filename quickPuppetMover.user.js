@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Move Puppets
 // @namespace    Kractero
-// @version      1.0
+// @version      1.1
 // @description  Quickly move regions, set flag for new puppets
 // @author       Kractero
 // @match        https://*.nationstates.net/*
@@ -13,24 +13,19 @@
 ;(function () {
   'use strict'
   const regionKey = '1'
-  const moveKey = '2'
-  const tgKey = '3'
-  const settingsKey = '4'
-  const regionName = 'herta_space_station'
+  const tgKey = '2'
+  const settingsKey = '3'
+  const waKey = '4'
+  const regionName = 'koprulu_sector'
   const regionalPassword = ''
 
-  hotkeys(regionKey, function (event, handler) {
+  hotkeys(regionKey, function (event) {
     event.preventDefault()
-    window.location.href = `https://www.nationstates.net/region=${regionName}`
-  })
+    if (!window.location.href.includes(`region=${regionName}`)) {
+      window.location.href = `https://www.nationstates.net/region=${regionName}`
+    }
 
-  hotkeys(moveKey, function (event, handler) {
-    event.preventDefault()
-    if (
-      window.location.href.includes('region') &&
-      !document.querySelector('#panelregionbar a').getAttribute('href').includes('herta_space_station') &&
-      document.querySelector('.danger')
-    ) {
+    if (window.location.href.includes('region') && document.querySelector('button[name="move_region"]')) {
       document.querySelector('.danger').click()
     }
 
@@ -40,7 +35,7 @@
     }
   })
 
-  hotkeys(tgKey, function (event, handler) {
+  hotkeys(tgKey, function (event) {
     event.preventDefault()
     if (!window.location.href.includes('tgsettings')) {
       window.location.href = 'https://www.nationstates.net/page=tgsettings'
@@ -50,22 +45,26 @@
     }
   })
 
-  // Mousetrap.bind(
-  //   [settingsKey],
-  //   function (ev) {
-  //     noinput_mousetrap(ev)
-  //     if (!window.location.href.includes('upload_flag')) {
-  //       window.location.href = 'https://www.nationstates.net/page=upload_flag'
-  //     } else if (
-  //       document.querySelector('#previewimage').getAttribute('src') !==
-  //       'data:data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
-  //     ) {
-  //       document.querySelector('.primary').click()
-  //     } else {
-  //       console.log(document.querySelector('#previewimage'))
-  //       document.getElementById('file').click()
-  //     }
-  //   },
-  //   'keyup'
-  // )
+  hotkeys(settingsKey, function (event) {
+    event.preventDefault()
+    if (!window.location.href.includes('upload_flag')) {
+      window.location.href = 'https://www.nationstates.net/page=upload_flag'
+    } else if (
+      document.querySelector('#previewimage').getAttribute('src') !==
+      'data:data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+    ) {
+      document.querySelector('.primary').click()
+    } else {
+      document.getElementById('file').click()
+    }
+  })
+
+  hotkeys(waKey, function (event) {
+    event.preventDefault()
+    if (!window.location.href.includes('page=un')) {
+      window.location.href = 'https://www.nationstates.net/page=un'
+    } else {
+      document.querySelector('#content form button').click()
+    }
+  })
 })()
