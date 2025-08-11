@@ -1,15 +1,19 @@
-'use strict'
+"use strict";
 // ==UserScript==
 // @name        Some Card Assistant Manager
 // @match       https://*.nationstates.net/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     1.01
+// @version     1.02
 // @author      Kractero
 // @description Some Card Assistant Manager
 // ==/UserScript==
-;(async function () {
-  const links = `
+;
+(async function () {
+    const loggedin = document.getElementById('loggedin');
+    if (!loggedin?.dataset.nname)
+        return;
+    const links = `
     <div class="bel">
       <div class="belcontent">
         <a href="/page=blank/scam" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
@@ -25,89 +29,106 @@
         <button id="next-puppet" class="bellink linkys">NEXT</button>
       </div>
     </div>
-  `
-  const spacer = document.querySelector('#loginswitcher')
-  if (spacer) spacer.insertAdjacentHTML('beforebegin', links)
-  let currentIndex = -1
-  async function getPuppetData() {
-    const savedList = (await GM.getValue('puppetList', {})) || {}
-    const mainPassword = (await GM.getValue('mainPassword', '')) || ''
-    let activeGroup = (await GM.getValue('activeGroup', '')) || ''
-    if (!activeGroup || !(activeGroup in savedList)) {
-      activeGroup = Object.keys(savedList)[0] || ''
+  `;
+    const spacer = document.querySelector('#loginswitcher');
+    if (spacer)
+        spacer.insertAdjacentHTML('beforebegin', links);
+    let currentIndex = -1;
+    async function getPuppetData() {
+        const savedList = (await GM.getValue('puppetList', {})) || {};
+        const mainNation = (await GM.getValue('mainNation', '')) || '';
+        const mainPassword = (await GM.getValue('mainPassword', '')) || '';
+        let activeGroup = (await GM.getValue('activeGroup', '')) || '';
+        if (!activeGroup || !(activeGroup in savedList)) {
+            activeGroup = Object.keys(savedList)[0] || '';
+        }
+        const nationPasswordMap = new Map();
+        const puppetNations = [];
+        if (activeGroup && savedList[activeGroup]) {
+            savedList[activeGroup]?.forEach(line => {
+                const parts = line.split(',').map(s => s.trim());
+                const nation = parts[0] ? canonicalize(parts[0]) : '';
+                if (parts[1])
+                    nationPasswordMap.set(nation, parts[1]);
+                if (nation)
+                    puppetNations.push(nation);
+            });
+        }
+        return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup, mainNation };
     }
-    const nationPasswordMap = new Map()
-    const puppetNations = []
-    if (activeGroup && savedList[activeGroup]) {
-      savedList[activeGroup]?.forEach(line => {
-        const parts = line.split(',').map(s => s.trim())
-        const nation = parts[0] ? canonicalize(parts[0]) : ''
-        if (parts[1]) nationPasswordMap.set(nation, parts[1])
-        if (nation) puppetNations.push(nation)
-      })
+    async function login(nation, password, mainNation) {
+        if (!nation)
+            return;
+        const loginbox = document.getElementById('loginbox');
+        const loginForm = loginbox.querySelector('form');
+        if (window.location.pathname === '/page=blank/scam') {
+            loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+        }
+        else {
+            loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+        }
+        const nationInput = loginForm.querySelector('input[name="nation"]');
+        nationInput.value = nation ? nation : '';
+        const passwordInput = loginForm.querySelector('input[name="password"]');
+        passwordInput.value = password;
+        HTMLFormElement.prototype.submit.call(loginForm);
     }
-    return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup }
-  }
-  async function login(nation, password) {
-    if (!nation) return
-    const loginbox = document.getElementById('loginbox')
-    const loginForm = loginbox.querySelector('form')
-    if (window.location.pathname === '/page=blank/scam') loginForm.action = window.location.href
-    const nationInput = loginForm.querySelector('input[name="nation"]')
-    nationInput.value = nation ? nation : ''
-    const passwordInput = loginForm.querySelector('input[name="password"]')
-    passwordInput.value = password
-    HTMLFormElement.prototype.submit.call(loginForm)
-  }
-  async function loginAtIndex(index) {
-    const { puppetNations, nationPasswordMap, mainPassword } = await getPuppetData()
-    if (puppetNations.length === 0) return
-    if (index < 0) index = puppetNations.length - 1
-    if (index >= puppetNations.length) index = 0
-    currentIndex = index
-    const nation = puppetNations[index]
-    let password = nationPasswordMap.get(nation) || mainPassword || ''
-    if (!nation || !password) return
-    await login(nation, password)
-  }
-  const prevPuppetBtn = document.getElementById('prev-puppet')
-  const nextPuppetBtn = document.getElementById('next-puppet')
-  if (prevPuppetBtn) {
-    const onPrevClick = async e => {
-      e.preventDefault()
-      prevPuppetBtn.removeEventListener('click', onPrevClick)
-      const { puppetNations } = await getPuppetData()
-      if (puppetNations.length === 0) return
-      if (currentIndex === -1) {
-        const loggedin = document.getElementById('loggedin')
-        const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : ''
-        currentIndex = puppetNations.indexOf(loggedinNation)
-        if (currentIndex === -1) currentIndex = 0
-      }
-      await loginAtIndex(currentIndex - 1)
+    async function loginAtIndex(index) {
+        const { puppetNations, nationPasswordMap, mainPassword, mainNation } = await getPuppetData();
+        if (puppetNations.length === 0)
+            return;
+        if (index < 0)
+            index = puppetNations.length - 1;
+        if (index >= puppetNations.length)
+            index = 0;
+        currentIndex = index;
+        const nation = puppetNations[index];
+        let password = nationPasswordMap.get(nation) || mainPassword || '';
+        if (!nation || !password)
+            return;
+        await login(nation, password, mainNation);
     }
-    prevPuppetBtn.addEventListener('click', onPrevClick)
-  }
-  if (nextPuppetBtn) {
-    const onNextClick = async e => {
-      e.preventDefault()
-      nextPuppetBtn.removeEventListener('click', onNextClick)
-      const { puppetNations } = await getPuppetData()
-      if (puppetNations.length === 0) return
-      if (currentIndex === -1) {
-        const loggedin = document.getElementById('loggedin')
-        const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : ''
-        currentIndex = puppetNations.indexOf(loggedinNation)
-      }
-      await loginAtIndex(currentIndex + 1)
+    const prevPuppetBtn = document.getElementById('prev-puppet');
+    const nextPuppetBtn = document.getElementById('next-puppet');
+    if (prevPuppetBtn) {
+        const onPrevClick = async (e) => {
+            e.preventDefault();
+            prevPuppetBtn.removeEventListener('click', onPrevClick);
+            const { puppetNations } = await getPuppetData();
+            if (puppetNations.length === 0)
+                return;
+            if (currentIndex === -1) {
+                const loggedin = document.getElementById('loggedin');
+                const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : '';
+                currentIndex = puppetNations.indexOf(loggedinNation);
+                if (currentIndex === -1)
+                    currentIndex = 0;
+            }
+            await loginAtIndex(currentIndex - 1);
+        };
+        prevPuppetBtn.addEventListener('click', onPrevClick);
     }
-    nextPuppetBtn.addEventListener('click', onNextClick)
-  }
-  if (window.location.pathname === '/page=blank/scam') {
-    const { nationPasswordMap } = await getPuppetData()
-    const section = document.createElement('main')
-    section.className = 'scs-container'
-    section.innerHTML = `
+    if (nextPuppetBtn) {
+        const onNextClick = async (e) => {
+            e.preventDefault();
+            nextPuppetBtn.removeEventListener('click', onNextClick);
+            const { puppetNations } = await getPuppetData();
+            if (puppetNations.length === 0)
+                return;
+            if (currentIndex === -1) {
+                const loggedin = document.getElementById('loggedin');
+                const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : '';
+                currentIndex = puppetNations.indexOf(loggedinNation);
+            }
+            await loginAtIndex(currentIndex + 1);
+        };
+        nextPuppetBtn.addEventListener('click', onNextClick);
+    }
+    if (window.location.pathname === '/page=blank/scam') {
+        const { nationPasswordMap } = await getPuppetData();
+        const section = document.createElement('main');
+        section.className = 'scs-container';
+        section.innerHTML = `
       <h2>SCS Puppet Manager</h2>
       <button id="toggleForm">Hide Form</button>
       <div class="scs-form" id="puppetForm">
@@ -127,98 +148,105 @@
         <button id="generate">Generate</button>
       </div>
       <div id="scam"></div>
-    `
-    const content = document.getElementById('content')
-    if (content) content.append(section)
-    const form = document.getElementById('puppetForm')
-    const toggleFormBtn = document.getElementById('toggleForm')
-    const formHidden = await GM.getValue('formHidden', false)
-    toggleFormBtn.addEventListener('click', async () => {
-      const hidden = form.style.display === 'none'
-      form.style.display = hidden ? 'flex' : 'none'
-      toggleFormBtn.textContent = hidden ? 'Hide Form' : 'Show Form'
-      await GM.setValue('formHidden', !hidden)
-    })
-    if (formHidden) {
-      form.style.display = 'none'
-      toggleFormBtn.textContent = 'Show Form'
-    }
-    /**
-     * Misleading name that doesn't actually generate tables but prepares the table for generation.
-     * Updates the puppet list and updates the global nation to password mapping.
-     *
-     * @param {boolean} load - If true (meant for first loads), false meant for re-generating in place
-     * @returns {Promise<Record<string, string[]>>} Parsed puppet groups
-     */
-    async function generateTable(load) {
-      const puppetListTextarea = document.getElementById('puppetList')
-      let puppetGroups = {}
-      if (load) {
-        const savedGroupsJson = await GM.getValue('puppetGroups', '')
-        if (savedGroupsJson) {
-          try {
-            puppetGroups = JSON.parse(savedGroupsJson)
-            let text = ''
-            for (const groupName of Object.keys(puppetGroups)) {
-              text += `[${groupName}]\n`
-              text += puppetGroups[groupName]?.join('\n') + '\n'
-            }
-            puppetListTextarea.value = text.trim()
-          } catch (error) {
-            puppetGroups = parsePuppetGroups(puppetListTextarea.value)
-          }
-        } else {
-          puppetGroups = parsePuppetGroups(puppetListTextarea.value)
+    `;
+        const content = document.getElementById('content');
+        if (content)
+            content.append(section);
+        const form = document.getElementById('puppetForm');
+        const toggleFormBtn = document.getElementById('toggleForm');
+        const formHidden = await GM.getValue('formHidden', false);
+        toggleFormBtn.addEventListener('click', async () => {
+            const hidden = form.style.display === 'none';
+            form.style.display = hidden ? 'flex' : 'none';
+            toggleFormBtn.textContent = hidden ? 'Hide Form' : 'Show Form';
+            await GM.setValue('formHidden', !hidden);
+        });
+        if (formHidden) {
+            form.style.display = 'none';
+            toggleFormBtn.textContent = 'Show Form';
         }
-      } else {
-        puppetGroups = parsePuppetGroups(puppetListTextarea.value)
-        await GM.setValue('puppetGroups', JSON.stringify(puppetGroups))
-      }
-      nationPasswordMap.clear()
-      for (const group in puppetGroups) {
-        puppetGroups[group]?.forEach(line => {
-          const [nationPart, passwordPart] = line.split(',').map(s => s.trim())
-          if (passwordPart) {
-            nationPasswordMap.set(nationPart ? canonicalize(nationPart) : '', passwordPart)
-          }
-        })
-      }
-      if (Object.keys(puppetGroups).length > 0) {
-        buildTable(puppetGroups)
-        return puppetGroups
-      }
-    }
-    generateTable(true)
-    const mainNation = await GM.getValue('mainNation', '')
-    const nationInput = document.getElementById('mainNation')
-    nationInput.value = mainNation
-    if (!mainNation) {
-      alert('Provide Main')
-      return
-    }
-    const mainPassword = await GM.getValue('mainPassword', '')
-    const passwordInput = document.getElementById('mainPassword')
-    passwordInput.value = mainPassword
-    const generateButton = document.getElementById('generate')
-    generateButton.addEventListener('click', async () => {
-      const puppets = await generateTable(false)
-      await GM.setValue('puppetList', puppets)
-      await GM.setValue('mainNation', nationInput.value.trim())
-      await GM.setValue('mainPassword', passwordInput.value.trim())
-    })
-    async function buildTable(puppetGroups) {
-      const { activeGroup: storedActiveGroup } = await getPuppetData()
-      const groupNames = Object.keys(puppetGroups)
-      let sections = ``
-      let puppetList = []
-      let activeGroup =
-        storedActiveGroup && groupNames.includes(storedActiveGroup) ? storedActiveGroup : groupNames[0] || ''
-      groupNames.forEach(groupName => {
-        const isActive = groupName === activeGroup
-        sections += `<button data-group="${groupName}" class="${isActive ? 'active' : ''}">${groupName}</button>`
-      })
-      puppetList = activeGroup ? puppetGroups[activeGroup] : []
-      let content = `<div id="holder" class="holder">
+        /**
+         * Misleading name that doesn't actually generate tables but prepares the table for generation.
+         * Updates the puppet list and updates the global nation to password mapping.
+         *
+         * @param {boolean} load - If true (meant for first loads), false meant for re-generating in place
+         * @returns {Promise<Record<string, string[]>>} Parsed puppet groups
+         */
+        async function generateTable(load) {
+            const puppetListTextarea = document.getElementById('puppetList');
+            let puppetGroups = {};
+            if (load) {
+                const savedGroupsJson = await GM.getValue('puppetGroups', '');
+                if (savedGroupsJson) {
+                    try {
+                        puppetGroups = JSON.parse(savedGroupsJson);
+                        let text = '';
+                        for (const groupName of Object.keys(puppetGroups)) {
+                            text += `[${groupName}]\n`;
+                            text += puppetGroups[groupName]?.join('\n') + '\n';
+                        }
+                        puppetListTextarea.value = text.trim();
+                    }
+                    catch (error) {
+                        puppetGroups = parsePuppetGroups(puppetListTextarea.value);
+                    }
+                }
+                else {
+                    puppetGroups = parsePuppetGroups(puppetListTextarea.value);
+                }
+            }
+            else {
+                puppetGroups = parsePuppetGroups(puppetListTextarea.value);
+                await GM.setValue('puppetGroups', JSON.stringify(puppetGroups));
+            }
+            nationPasswordMap.clear();
+            for (const group in puppetGroups) {
+                puppetGroups[group]?.forEach(line => {
+                    const [nationPart, passwordPart] = line.split(',').map(s => s.trim());
+                    if (passwordPart) {
+                        nationPasswordMap.set(nationPart ? canonicalize(nationPart) : '', passwordPart);
+                    }
+                });
+            }
+            if (Object.keys(puppetGroups).length > 0) {
+                buildTable(puppetGroups);
+                return puppetGroups;
+            }
+        }
+        generateTable(true);
+        const mainNation = await GM.getValue('mainNation', '');
+        const nationInput = document.getElementById('mainNation');
+        nationInput.value = mainNation;
+        if (!mainNation) {
+            alert('Provide Main');
+            return;
+        }
+        const mainPassword = await GM.getValue('mainPassword', '');
+        const passwordInput = document.getElementById('mainPassword');
+        passwordInput.value = mainPassword;
+        const generateButton = document.getElementById('generate');
+        generateButton.addEventListener('click', async () => {
+            const puppets = await generateTable(false);
+            await GM.setValue('puppetList', puppets);
+            await GM.setValue('mainNation', nationInput.value.trim());
+            await GM.setValue('mainPassword', passwordInput.value.trim());
+        });
+        async function buildTable(puppetGroups) {
+            const { activeGroup: storedActiveGroup, mainNation } = await getPuppetData();
+            if (!mainNation) {
+                alert('Provide Main');
+                return;
+            }
+            const groupNames = Object.keys(puppetGroups);
+            let sections = ``;
+            let puppetList = [];
+            let activeGroup = storedActiveGroup && groupNames.includes(storedActiveGroup) ? storedActiveGroup : groupNames[0] || '';
+            groupNames.forEach(groupName => {
+                const isActive = groupName === activeGroup;
+                sections += `<button data-group="${groupName}" class="${isActive ? 'active' : ''}">${groupName}</button>`;
+            });
+            puppetList = activeGroup ? puppetGroups[activeGroup] : [];
+            let content = `<div id="holder" class="holder">
         <div id="sections">
             ${sections}
           </div>
@@ -235,96 +263,105 @@
             </table>
           </div>
         </div>
-      `
-      content += `</tbody></table>`
-      const scamDiv = document.getElementById('scam')
-      scamDiv.innerHTML = `
+      `;
+            content += `</tbody></table>`;
+            const scamDiv = document.getElementById('scam');
+            scamDiv.innerHTML = `
           <div>
             <button id="prevBtn">Prev</button>
             <button id="nextBtn">Next</button>
           </div>
           ${content}
-        `
-      const sectionsDiv = document.getElementById('sections')
-      const domain = document.getElementById('domain').value || 'www'
-      const tbody = document.querySelector('tbody')
-      function renderRows(puppetList) {
-        puppetList = puppetList.filter(puppet => !puppet.includes('['))
-        tbody.innerHTML = ''
-        puppetList.forEach((name, i) => {
-          const nation = name.includes(',') ? canonicalize(name.split(',')[0] || '') : canonicalize(name)
-          const base = `https://${domain}.nationstates.net/container=${nation}/nation=${nation}`
-          const row = `
+        `;
+            const sectionsDiv = document.getElementById('sections');
+            const domain = document.getElementById('domain').value || 'www';
+            const tbody = document.querySelector('tbody');
+            function renderRows(puppetList) {
+                puppetList = puppetList.filter(puppet => !puppet.includes('['));
+                tbody.innerHTML = '';
+                puppetList.forEach((name, i) => {
+                    const nation = name.includes(',') ? canonicalize(name.split(',')[0] || '') : canonicalize(name);
+                    const base = `https://${domain}.nationstates.net/container=${nation}/nation=${nation}`;
+                    const row = `
           <tr data-nation="${nation}">
             <td>${i + 1}</td>
-            <td><a href="${base}" target="_blank">${nation}</a></td>
-            <td><a href="${base}/page=deck" target="_blank">Deck</a></td>
-            <td><a href="${base}/page=deck/value_deck=1" target="_blank">Value Deck</a></td>
+            <td><a href="${base}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">${nation}</a></td>
+            <td><a href="${base}/page=deck?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Deck</a></td>
+            <td><a href="${base}/page=deck/value_deck=1?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Value Deck</a></td>
             <td><button class="login-button" data-nation="${nation}">Login</button></td>
-          </tr>`
-          tbody.insertAdjacentHTML('beforeend', row)
-        })
-        const loggedin = document.getElementById('loggedin')
-        const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : ''
-        const rows = Array.from(scamDiv.querySelectorAll('tbody tr'))
-        rows.forEach((row, idx) => {
-          if (row.dataset.nation === loggedinNation) {
-            row.classList.add('highlight')
-            currentIndex = idx
-          } else row.classList.remove('highlight')
-        })
-        scamDiv.addEventListener('click', async event => {
-          const target = event.target
-          if (target.matches('.login-button')) {
-            const allButtons = scamDiv.querySelectorAll('.login-button')
-            allButtons.forEach(btn => (btn.disabled = true))
-            const nation = target.dataset.nation || ''
-            let password = mainPassword
-            if (!password) password = nationPasswordMap.get(nation)
-            try {
-              await login(nation, password)
-            } finally {
-              allButtons.forEach(btn => (btn.disabled = false))
+          </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+                const loggedin = document.getElementById('loggedin');
+                const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : '';
+                const rows = Array.from(scamDiv.querySelectorAll('tbody tr'));
+                rows.forEach((row, idx) => {
+                    if (row.dataset.nation === loggedinNation) {
+                        row.classList.add('highlight');
+                        currentIndex = idx;
+                    }
+                    else
+                        row.classList.remove('highlight');
+                });
+                scamDiv.addEventListener('click', async (event) => {
+                    const target = event.target;
+                    if (target.matches('.login-button')) {
+                        const allButtons = scamDiv.querySelectorAll('.login-button');
+                        allButtons.forEach(btn => (btn.disabled = true));
+                        const nation = target.dataset.nation || '';
+                        let password = mainPassword;
+                        if (!password)
+                            password = nationPasswordMap.get(nation);
+                        try {
+                            await login(nation, password, mainNation);
+                        }
+                        finally {
+                            allButtons.forEach(btn => (btn.disabled = false));
+                        }
+                    }
+                });
+                const prevButton = document.getElementById('prevBtn');
+                const nextButton = document.getElementById('nextBtn');
+                function onPrevClick() {
+                    if (rows.length === 0)
+                        return;
+                    currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1;
+                    const button = rows[currentIndex]?.querySelector('.login-button');
+                    if (button)
+                        button.click();
+                    prevButton.removeEventListener('click', onPrevClick);
+                }
+                function onNextClick() {
+                    if (rows.length === 0)
+                        return;
+                    currentIndex = (currentIndex + 1) % rows.length;
+                    const button = rows[currentIndex]?.querySelector('.login-button');
+                    if (button)
+                        button.click();
+                    nextButton.removeEventListener('click', onNextClick);
+                }
+                prevButton.addEventListener('click', onPrevClick);
+                nextButton.addEventListener('click', onNextClick);
+                const searchBox = document.getElementById('puppetSearch');
+                searchBox.addEventListener('input', () => filterRows(searchBox, rows));
             }
-          }
-        })
-        const prevButton = document.getElementById('prevBtn')
-        const nextButton = document.getElementById('nextBtn')
-        function onPrevClick() {
-          if (rows.length === 0) return
-          currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1
-          const button = rows[currentIndex]?.querySelector('.login-button')
-          if (button) button.click()
-          prevButton.removeEventListener('click', onPrevClick)
+            renderRows(puppetList);
+            sectionsDiv.addEventListener('click', async (e) => {
+                const button = e.target;
+                if (button.tagName === 'BUTTON' && button.dataset.group) {
+                    sectionsDiv.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    activeGroup = button.dataset.group;
+                    await GM.setValue('activeGroup', activeGroup);
+                    currentIndex = -1;
+                    const searchBox = document.getElementById('puppetSearch');
+                    if (searchBox)
+                        searchBox.value = '';
+                    renderRows(puppetGroups[activeGroup]);
+                }
+            });
         }
-        function onNextClick() {
-          if (rows.length === 0) return
-          currentIndex = (currentIndex + 1) % rows.length
-          const button = rows[currentIndex]?.querySelector('.login-button')
-          if (button) button.click()
-          nextButton.removeEventListener('click', onNextClick)
-        }
-        prevButton.addEventListener('click', onPrevClick)
-        nextButton.addEventListener('click', onNextClick)
-        const searchBox = document.getElementById('puppetSearch')
-        searchBox.addEventListener('input', () => filterRows(searchBox, rows))
-      }
-      renderRows(puppetList)
-      sectionsDiv.addEventListener('click', async e => {
-        const button = e.target
-        if (button.tagName === 'BUTTON' && button.dataset.group) {
-          sectionsDiv.querySelectorAll('button').forEach(b => b.classList.remove('active'))
-          button.classList.add('active')
-          activeGroup = button.dataset.group
-          await GM.setValue('activeGroup', activeGroup)
-          currentIndex = -1
-          const searchBox = document.getElementById('puppetSearch')
-          if (searchBox) searchBox.value = ''
-          renderRows(puppetGroups[activeGroup])
-        }
-      })
-    }
-    const css = `
+        const css = `
       .scs-container {
         margin-top: 1rem;
         padding: 0.5rem;
@@ -459,21 +496,21 @@
       .linkys {
         decoration: none;
       }
-    `
-    const styleTag = document.createElement('style')
-    styleTag.textContent = css
-    document.head.appendChild(styleTag)
-  }
-})()
+    `;
+        const styleTag = document.createElement('style');
+        styleTag.textContent = css;
+        document.head.appendChild(styleTag);
+    }
+})();
 function canonicalize(str) {
-  return str.trim().toLowerCase().replaceAll(' ', '_')
+    return str.trim().toLowerCase().replaceAll(' ', '_');
 }
 function filterRows(searchBox, rows) {
-  const value = canonicalize(searchBox.value)
-  rows.forEach(row => {
-    const name = canonicalize(row.dataset.nation || '')
-    row.style.display = name.includes(value) ? '' : 'none'
-  })
+    const value = canonicalize(searchBox.value);
+    rows.forEach(row => {
+        const name = canonicalize(row.dataset.nation || '');
+        row.style.display = name.includes(value) ? '' : 'none';
+    });
 }
 /**
  * Parses puppet groups from the provided puppets, groups defined by [GROUPNAME]
@@ -482,22 +519,25 @@ function filterRows(searchBox, rows) {
  * @returns {Record<string, string[]>} An object that maps group names to associated puppets.
  */
 function parsePuppetGroups(text) {
-  const lines = text
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean)
-  const groups = {}
-  let currentGroup = 'Group 1'
-  let groupCount = 1
-  for (const line of lines) {
-    const match = line.match(/^\[(.+?)\]$/)
-    if (match) {
-      currentGroup = match[1]?.trim() || `Group ${++groupCount}`
-      if (!groups[currentGroup]) groups[currentGroup] = []
-    } else {
-      if (!groups[currentGroup]) groups[currentGroup] = []
-      groups[currentGroup]?.push(line)
+    const lines = text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+    const groups = {};
+    let currentGroup = 'Group 1';
+    let groupCount = 1;
+    for (const line of lines) {
+        const match = line.match(/^\[(.+?)\]$/);
+        if (match) {
+            currentGroup = match[1]?.trim() || `Group ${++groupCount}`;
+            if (!groups[currentGroup])
+                groups[currentGroup] = [];
+        }
+        else {
+            if (!groups[currentGroup])
+                groups[currentGroup] = [];
+            groups[currentGroup]?.push(line);
+        }
     }
-  }
-  return groups
+    return groups;
 }

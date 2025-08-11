@@ -3,12 +3,14 @@
 // @match       https://*.nationstates.net/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     1.01
+// @version     1.02
 // @author      Kractero
 // @description Some Card Assistant Manager
 // ==/UserScript==
 
 ;(async function () {
+  const loggedin = document.getElementById('loggedin')
+  if (!loggedin?.dataset.nname) return
   const links = `
     <div class="bel">
       <div class="belcontent">
@@ -34,6 +36,7 @@
 
   async function getPuppetData() {
     const savedList: Record<string, string[]> = (await GM.getValue('puppetList', {})) || {}
+    const mainNation = (await GM.getValue('mainNation', '')) || ''
     const mainPassword = (await GM.getValue('mainPassword', '')) || ''
     let activeGroup = (await GM.getValue('activeGroup', '')) || ''
     if (!activeGroup || !(activeGroup in savedList)) {
@@ -51,14 +54,18 @@
       })
     }
 
-    return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup }
+    return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup, mainNation }
   }
 
-  async function login(nation: string, password: string) {
+  async function login(nation: string, password: string, mainNation: string) {
     if (!nation) return
     const loginbox = document.getElementById('loginbox') as HTMLElement
     const loginForm = loginbox.querySelector('form') as HTMLFormElement
-    if (window.location.pathname === '/page=blank/scam') loginForm.action = window.location.href
+    if (window.location.pathname === '/page=blank/scam') {
+      loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`
+    } else {
+      loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`
+    }
     const nationInput = loginForm.querySelector('input[name="nation"]') as HTMLInputElement
     nationInput.value = nation ? nation : ''
     const passwordInput = loginForm.querySelector('input[name="password"]') as HTMLInputElement
@@ -67,7 +74,7 @@
   }
 
   async function loginAtIndex(index: number) {
-    const { puppetNations, nationPasswordMap, mainPassword } = await getPuppetData()
+    const { puppetNations, nationPasswordMap, mainPassword, mainNation } = await getPuppetData()
     if (puppetNations.length === 0) return
 
     if (index < 0) index = puppetNations.length - 1
@@ -78,7 +85,7 @@
     let password = nationPasswordMap.get(nation) || mainPassword || ''
     if (!nation || !password) return
 
-    await login(nation, password)
+    await login(nation, password, mainNation)
   }
 
   const prevPuppetBtn = document.getElementById('prev-puppet')
@@ -248,7 +255,11 @@
     })
 
     async function buildTable(puppetGroups: any) {
-      const { activeGroup: storedActiveGroup } = await getPuppetData()
+      const { activeGroup: storedActiveGroup, mainNation } = await getPuppetData()
+      if (!mainNation) {
+        alert('Provide Main')
+        return
+      }
       const groupNames = Object.keys(puppetGroups)
       let sections = ``
       let puppetList: string[] = []
@@ -305,9 +316,9 @@
           const row = `
           <tr data-nation="${nation}">
             <td>${i + 1}</td>
-            <td><a href="${base}" target="_blank">${nation}</a></td>
-            <td><a href="${base}/page=deck" target="_blank">Deck</a></td>
-            <td><a href="${base}/page=deck/value_deck=1" target="_blank">Value Deck</a></td>
+            <td><a href="${base}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">${nation}</a></td>
+            <td><a href="${base}/page=deck?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Deck</a></td>
+            <td><a href="${base}/page=deck/value_deck=1?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Value Deck</a></td>
             <td><button class="login-button" data-nation="${nation}">Login</button></td>
           </tr>`
           tbody.insertAdjacentHTML('beforeend', row)
@@ -332,7 +343,7 @@
             let password = mainPassword
             if (!password) password = nationPasswordMap.get(nation)
             try {
-              await login(nation, password)
+              await login(nation, password, mainNation)
             } finally {
               allButtons.forEach(btn => ((btn as HTMLButtonElement).disabled = false))
             }
