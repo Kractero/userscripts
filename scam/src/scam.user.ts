@@ -3,7 +3,7 @@
 // @match       https://*.nationstates.net/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     1.02
+// @version     1.03
 // @author      Kractero
 // @description Some Card Assistant Manager
 // ==/UserScript==
@@ -13,7 +13,7 @@
   if (!loggedin?.dataset.nname) return
   const links = `
     <div class="bel">
-      <div class="belcontent">
+      <div class="belcontent scam">
         <a href="/page=blank/scam" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
       </div>
     </div>
@@ -131,6 +131,162 @@
     nextPuppetBtn.addEventListener('click', onNextClick)
   }
 
+  const scam = document.querySelector('.scam')
+
+  if (scam) {
+    const { puppetNations } = await getPuppetData()
+    const itemsPerPage = 25
+    const totalPages = Math.ceil(puppetNations.length / itemsPerPage)
+    let currentPage = await GM.getValue('page', 1)
+
+    const outputDiv = document.createElement('div')
+    const loginbox = document.getElementById('loginbox') as HTMLElement
+
+    outputDiv.id = 'outputDiv'
+    outputDiv.style.color = 'inherit'
+    outputDiv.style.display = 'none'
+    outputDiv.style.flexDirection = 'column'
+    outputDiv.style.alignItems = 'center'
+    outputDiv.style.position = 'absolute'
+    outputDiv.style.overflow = 'scroll'
+    outputDiv.style.minWidth = '300px'
+    outputDiv.style.padding = '9px'
+    outputDiv.style.textAlign = 'center'
+    outputDiv.style.borderRadius = '8px'
+    outputDiv.style.background = 'black'
+    outputDiv.style.color = 'white'
+    outputDiv.style.right = '6px'
+    outputDiv.style.zIndex = '100'
+    outputDiv.style.textShadow = 'none'
+    outputDiv.style.boxShadow = '0 0 12px black'
+
+    const navDiv = document.createElement('div')
+    navDiv.id = 'navDiv'
+    navDiv.style.display = 'flex'
+    navDiv.style.justifyContent = 'space-between'
+    navDiv.style.width = '100%'
+    navDiv.style.marginBottom = '0.5rem'
+
+    const prevBtn = document.createElement('button')
+    prevBtn.textContent = 'Prev'
+
+    const nextBtn = document.createElement('button')
+    nextBtn.textContent = 'Next'
+
+    navDiv.appendChild(prevBtn)
+    navDiv.appendChild(nextBtn)
+    outputDiv.appendChild(navDiv)
+
+    const nationsContainer = document.createElement('div')
+    nationsContainer.style.display = 'flex'
+    nationsContainer.style.flexDirection = 'column'
+    nationsContainer.style.alignItems = 'center'
+    nationsContainer.style.gap = '0.25rem'
+    outputDiv.appendChild(nationsContainer)
+
+    function renderPage(page: number) {
+      nationsContainer.innerHTML = ''
+
+      const start = (page - 1) * itemsPerPage
+      const end = Math.min(start + itemsPerPage, puppetNations.length)
+      for (let i = start; i < end; i++) {
+        const nation = puppetNations[i]
+        if (!nation) break
+        const btn = document.createElement('button')
+        btn.dataset.nation = nation
+        btn.textContent = nation
+        btn.className = 'linky'
+
+        const onClick = async (e: Event) => {
+          e.preventDefault()
+          btn.removeEventListener('click', onClick)
+          if (puppetNations.length === 0) return
+          currentIndex = puppetNations.indexOf(nation)
+          if (currentIndex === -1) currentIndex = 0
+
+          await loginAtIndex(currentIndex)
+        }
+
+        btn.addEventListener('click', onClick)
+        nationsContainer.appendChild(btn)
+      }
+
+      GM.setValue('page', page)
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--
+        renderPage(currentPage)
+      }
+    })
+
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++
+        renderPage(currentPage)
+      }
+    })
+
+    renderPage(currentPage)
+
+    scam.appendChild(outputDiv)
+
+    let isOverScam = false
+    let isOverOutput = false
+
+    scam.addEventListener('mouseenter', () => {
+      isOverScam = true
+      outputDiv.style.display = 'flex'
+    })
+
+    scam.addEventListener('mouseleave', () => {
+      isOverScam = false
+      if (!isOverOutput) {
+        outputDiv.style.display = 'none'
+      }
+    })
+
+    outputDiv.addEventListener('mouseenter', () => {
+      isOverOutput = true
+      outputDiv.style.display = 'flex'
+    })
+
+    outputDiv.addEventListener('mouseleave', () => {
+      isOverOutput = false
+      if (!isOverScam) {
+        outputDiv.style.display = 'none'
+      }
+    })
+  }
+
+  const popoutCSS = `
+    #navDiv button {
+      padding: 0.25rem 0.25rem;
+      margin: 0.25rem 0.25rem;
+      width: max-content;
+      cursor: pointer;
+    }
+
+    .linky {
+      all: unset;
+      cursor: pointer;
+      color: inherit;
+      text-decoration: none;
+      font-weight: normal;
+      transition: color 0.3s ease;
+      margin: 3px;
+    }
+
+    .linky:hover {
+      color: green;
+    }
+  `
+
+  const styleTag = document.createElement('style')
+  styleTag.textContent = popoutCSS
+  document.head.appendChild(styleTag)
+
   if (window.location.pathname === '/page=blank/scam') {
     const { nationPasswordMap } = await getPuppetData()
 
@@ -235,11 +391,6 @@
     const mainNation = await GM.getValue('mainNation', '')
     const nationInput = document.getElementById('mainNation') as HTMLInputElement
     nationInput.value = mainNation
-
-    if (!mainNation) {
-      alert('Provide Main')
-      return
-    }
 
     const mainPassword = await GM.getValue('mainPassword', '')
     const passwordInput = document.getElementById('mainPassword') as HTMLInputElement
@@ -527,7 +678,7 @@
       }
 
       .linkys {
-        decoration: none;
+        all: unset;
       }
     `
 
