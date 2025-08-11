@@ -1,0 +1,23 @@
+{
+  "name": "userscripts",
+  "version": "1.0.0",
+  "description": "Various userscripts for trading cards. I use these with [Violetmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/) but it also works with Tampermonkey.",
+  "devDependencies": {
+    "@types/tampermonkey": "^5.0.4",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kractero/userscripts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kractero/userscripts/issues"
+  },
+  "homepage": "https://github.com/Kractero/userscripts#readme"
+}
