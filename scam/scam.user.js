@@ -1,10 +1,10 @@
 'use strict'
 // ==UserScript==
-// @name        SCAM
+// @name        Some Card Assistant Manager
 // @match       https://*.nationstates.net/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     1.0
+// @version     1.01
 // @author      Kractero
 // @description Some Card Assistant Manager
 // ==/UserScript==
@@ -12,21 +12,17 @@
   const links = `
     <div class="bel">
       <div class="belcontent">
-        <a href="/page=blank/rces" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
+        <a href="/page=blank/scam" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
       </div>
     </div>
     <div class="bel">
       <div class="belcontent">
-        <a href="#" id="prev-puppet" class="bellink">
-          PREV
-        </a>
+        <button id="prev-puppet" class="bellink linkys">PREV</button>
       </div>
     </div>
     <div class="bel">
       <div class="belcontent">
-        <a href="#" id="next-puppet" class="bellink">
-          NEXT
-        </a>
+        <button id="next-puppet" class="bellink linkys">NEXT</button>
       </div>
     </div>
   `
@@ -56,7 +52,7 @@
     if (!nation) return
     const loginbox = document.getElementById('loginbox')
     const loginForm = loginbox.querySelector('form')
-    loginForm.action = window.location.href
+    if (window.location.pathname === '/page=blank/scam') loginForm.action = window.location.href
     const nationInput = loginForm.querySelector('input[name="nation"]')
     nationInput.value = nation ? nation : ''
     const passwordInput = loginForm.querySelector('input[name="password"]')
@@ -107,7 +103,7 @@
     }
     nextPuppetBtn.addEventListener('click', onNextClick)
   }
-  if (window.location.pathname === '/page=blank/rces') {
+  if (window.location.pathname === '/page=blank/scam') {
     const { nationPasswordMap } = await getPuppetData()
     const section = document.createElement('main')
     section.className = 'scs-container'
@@ -124,13 +120,13 @@
         <label for="mainNation">Main Nation:</label>
         <input type="text" id="mainNation" name="mainNation" />
 
-        <label for="mainPassword">Password:</label>
+        <label for="mainPassword">Puppet Password:</label>
         <input type="password" id="mainPassword" name="mainPassword" />
         <label for="puppetList">Puppet names:</label>
         <textarea id="puppetList" rows="10" class="scs-textarea" placeholder="nation one\nnation two\nnation three"></textarea>
         <button id="generate">Generate</button>
       </div>
-      <div id="rces"></div>
+      <div id="scam"></div>
     `
     const content = document.getElementById('content')
     if (content) content.append(section)
@@ -241,8 +237,8 @@
         </div>
       `
       content += `</tbody></table>`
-      const rcesDiv = document.getElementById('rces')
-      rcesDiv.innerHTML = `
+      const scamDiv = document.getElementById('scam')
+      scamDiv.innerHTML = `
           <div>
             <button id="prevBtn">Prev</button>
             <button id="nextBtn">Next</button>
@@ -270,36 +266,46 @@
         })
         const loggedin = document.getElementById('loggedin')
         const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : ''
-        const rows = Array.from(rcesDiv.querySelectorAll('tbody tr'))
+        const rows = Array.from(scamDiv.querySelectorAll('tbody tr'))
         rows.forEach((row, idx) => {
           if (row.dataset.nation === loggedinNation) {
             row.classList.add('highlight')
             currentIndex = idx
           } else row.classList.remove('highlight')
         })
-        rcesDiv.addEventListener('click', async event => {
+        scamDiv.addEventListener('click', async event => {
           const target = event.target
           if (target.matches('.login-button')) {
+            const allButtons = scamDiv.querySelectorAll('.login-button')
+            allButtons.forEach(btn => (btn.disabled = true))
             const nation = target.dataset.nation || ''
             let password = mainPassword
             if (!password) password = nationPasswordMap.get(nation)
-            await login(nation, password)
+            try {
+              await login(nation, password)
+            } finally {
+              allButtons.forEach(btn => (btn.disabled = false))
+            }
           }
         })
         const prevButton = document.getElementById('prevBtn')
         const nextButton = document.getElementById('nextBtn')
-        prevButton.addEventListener('click', () => {
+        function onPrevClick() {
           if (rows.length === 0) return
           currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1
           const button = rows[currentIndex]?.querySelector('.login-button')
           if (button) button.click()
-        })
-        nextButton.addEventListener('click', () => {
+          prevButton.removeEventListener('click', onPrevClick)
+        }
+        function onNextClick() {
           if (rows.length === 0) return
           currentIndex = (currentIndex + 1) % rows.length
           const button = rows[currentIndex]?.querySelector('.login-button')
           if (button) button.click()
-        })
+          nextButton.removeEventListener('click', onNextClick)
+        }
+        prevButton.addEventListener('click', onPrevClick)
+        nextButton.addEventListener('click', onNextClick)
         const searchBox = document.getElementById('puppetSearch')
         searchBox.addEventListener('input', () => filterRows(searchBox, rows))
       }
@@ -403,14 +409,14 @@
         font-weight: 600;
       }
 
-      #rces {
+      #scam {
         margin-top: 2rem;
         overflow-x: auto;
         flex: 1;
         min-width: 0;
       }
 
-      #rces table {
+      #scam table {
         width: 100%;
         border-collapse: collapse;
         border-radius: 6px;
@@ -418,8 +424,8 @@
         font-size: 0.9rem;
       }
 
-      #rces th,
-      #rces td {
+      #scam th,
+      #scam td {
         padding: 0.6rem 0.8rem;
         text-align: left;
         border-bottom: 1px solid #ddd;
@@ -433,11 +439,11 @@
         cursor: pointer;
       }
 
-      #rces div {
+      #scam div {
         margin-bottom: 1rem;
       }
 
-      #rces tbody tr.highlight {
+      #scam tbody tr.highlight {
         background-color: darkslateblue;
       }
 
@@ -448,6 +454,10 @@
       #puppetSearch {
         margin-bottom: 1rem;
         width: 100%;
+      }
+
+      .linkys {
+        decoration: none;
       }
     `
     const styleTag = document.createElement('style')
