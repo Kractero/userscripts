@@ -15,7 +15,7 @@
     const loggedin = document.getElementById('loggedin');
     if (!loggedin?.dataset.nname)
         return;
-    const itemsPerPage = 25;
+    let itemsPerPage = await GM.getValue('itemsPerPage', 25);
     let puppetNations = [];
     let nationPasswordMap = new Map();
     let mainPassword = (await GM.getValue('mainPassword', '')) || '';
@@ -25,8 +25,20 @@
     if (!activeGroup || !(activeGroup in savedList)) {
         activeGroup = Object.keys(savedList)[0] || '';
     }
-    let puppetGroups = JSON.parse((await GM.getValue('puppetGroups', '')) || '');
-    updatePuppetData(savedList, activeGroup);
+    const groups = await GM.getValue('puppetGroups', '{}');
+    let puppetGroups = JSON.parse(groups);
+    nationPasswordMap.clear();
+    puppetNations = [];
+    if (activeGroup && savedList[activeGroup]) {
+        savedList[activeGroup].forEach(line => {
+            const parts = line.split(',').map(s => s.trim());
+            const nation = parts[0] ? canonicalize(parts[0]) : '';
+            if (parts[1])
+                nationPasswordMap.set(nation, parts[1]);
+            if (nation)
+                puppetNations.push(nation);
+        });
+    }
     const links = `
     <div class="bel">
       <div class="belcontent" id="manageButton">
@@ -48,20 +60,6 @@
     if (spacer)
         spacer.insertAdjacentHTML('beforebegin', links);
     let currentIndex = -1;
-    function updatePuppetData(savedList, activeGroup) {
-        nationPasswordMap.clear();
-        puppetNations = [];
-        if (activeGroup && savedList[activeGroup]) {
-            savedList[activeGroup].forEach(line => {
-                const parts = line.split(',').map(s => s.trim());
-                const nation = parts[0] ? canonicalize(parts[0]) : '';
-                if (parts[1])
-                    nationPasswordMap.set(nation, parts[1]);
-                if (nation)
-                    puppetNations.push(nation);
-            });
-        }
-    }
     async function login(nation, password, mainNation) {
         if (!nation)
             return;
@@ -209,6 +207,29 @@
         navDiv.appendChild(groupSelect);
         navDiv.appendChild(nextBtn);
         outputDiv.appendChild(navDiv);
+        const perPageInputLabel = document.createElement('label');
+        perPageInputLabel.textContent = 'Items per page';
+        const perPageInput = document.createElement('input');
+        perPageInput.type = 'number';
+        perPageInput.min = '5';
+        perPageInput.value = itemsPerPage.toString();
+        const perPageButton = document.createElement('button');
+        perPageButton.textContent = 'Save';
+        const perPageDiv = document.createElement('div');
+        perPageDiv.id = 'itemsPerPage';
+        perPageDiv.appendChild(perPageInputLabel);
+        perPageDiv.appendChild(perPageInput);
+        perPageDiv.appendChild(perPageButton);
+        perPageButton.addEventListener('click', () => {
+            itemsPerPage = parseInt(perPageInput.value, 10);
+            if (!isNaN(itemsPerPage) && itemsPerPage > 0) {
+                totalPages = Math.ceil(puppetNations.length / itemsPerPage);
+                currentPage = 1;
+                GM.setValue('itemsPerPage', itemsPerPage);
+                renderPage(currentPage);
+            }
+        });
+        outputDiv.appendChild(perPageDiv);
         const nationsContainer = document.createElement('div');
         nationsContainer.id = 'nationContainer';
         outputDiv.appendChild(nationsContainer);
@@ -272,6 +293,14 @@
             }
         });
         const css = `
+      #itemsPerPage {
+        margin: 5px 10px 10px 10px;
+      }
+
+      #itemsPerPage input {
+        width: 50px;
+      }
+
       #navDiv {
         display: flex;
         justify-content: space-between;
@@ -471,7 +500,13 @@
                     }
                 });
                 const searchBox = document.getElementById('puppetSearch');
-                searchBox.addEventListener('input', () => filterRows(searchBox, rows));
+                searchBox.addEventListener('input', () => {
+                    const value = canonicalize(searchBox.value);
+                    rows.forEach(row => {
+                        const name = canonicalize(row.dataset.nation || '');
+                        row.style.display = name.includes(value) ? '' : 'none';
+                    });
+                });
             }
             renderRows(puppetList);
             sectionsDiv.addEventListener('click', async (e) => {
@@ -631,19 +666,6 @@
 function canonicalize(str) {
     return str.trim().toLowerCase().replaceAll(' ', '_');
 }
-function filterRows(searchBox, rows) {
-    const value = canonicalize(searchBox.value);
-    rows.forEach(row => {
-        const name = canonicalize(row.dataset.nation || '');
-        row.style.display = name.includes(value) ? '' : 'none';
-    });
-}
-/**
- * Parses puppet groups from the provided puppets, groups defined by [GROUPNAME]
- *
- * @param {string} text - Raw text with entries.
- * @returns {Record<string, string[]>} An object that maps group names to associated puppets.
- */
 function parsePuppetGroups(text) {
     const lines = text
         .split(/\r?\n/)
