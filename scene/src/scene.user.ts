@@ -7,7 +7,6 @@
 // @version     1.04
 // @author      Kractero
 // @description Puppet manager with groups I guess
-// @require     https://cdn.jsdelivr.net/npm/@violentmonkey/dom@2
 // ==/UserScript==
 
 ;(async function () {
