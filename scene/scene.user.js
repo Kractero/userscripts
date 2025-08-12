@@ -5,7 +5,8 @@
 // @grant       GM.setValue
 // @grant       GM.getValue
 // @grant       GM_addStyle
-// @version     1.04
+// @grant       GM_addValueChangeListener
+// @version     1.0
 // @author      Kractero
 // @description Puppet manager with groups I guess
 // ==/UserScript==
@@ -14,6 +15,18 @@
     const loggedin = document.getElementById('loggedin');
     if (!loggedin?.dataset.nname)
         return;
+    const itemsPerPage = 25;
+    let puppetNations = [];
+    let nationPasswordMap = new Map();
+    let mainPassword = (await GM.getValue('mainPassword', '')) || '';
+    let mainNation = (await GM.getValue('mainNation', '')) || '';
+    let savedList = (await GM.getValue('puppetList', {})) || {};
+    let activeGroup = (await GM.getValue('activeGroup', '')) || '';
+    if (!activeGroup || !(activeGroup in savedList)) {
+        activeGroup = Object.keys(savedList)[0] || '';
+    }
+    let puppetGroups = JSON.parse((await GM.getValue('puppetGroups', '')) || '');
+    updatePuppetData(savedList, activeGroup);
     const links = `
     <div class="bel">
       <div class="belcontent" id="manageButton">
@@ -35,18 +48,11 @@
     if (spacer)
         spacer.insertAdjacentHTML('beforebegin', links);
     let currentIndex = -1;
-    async function getPuppetData() {
-        const savedList = (await GM.getValue('puppetList', {})) || {};
-        const mainNation = (await GM.getValue('mainNation', '')) || '';
-        const mainPassword = (await GM.getValue('mainPassword', '')) || '';
-        let activeGroup = (await GM.getValue('activeGroup', '')) || '';
-        if (!activeGroup || !(activeGroup in savedList)) {
-            activeGroup = Object.keys(savedList)[0] || '';
-        }
-        const nationPasswordMap = new Map();
-        const puppetNations = [];
+    function updatePuppetData(savedList, activeGroup) {
+        nationPasswordMap.clear();
+        puppetNations = [];
         if (activeGroup && savedList[activeGroup]) {
-            savedList[activeGroup]?.forEach(line => {
+            savedList[activeGroup].forEach(line => {
                 const parts = line.split(',').map(s => s.trim());
                 const nation = parts[0] ? canonicalize(parts[0]) : '';
                 if (parts[1])
@@ -55,7 +61,6 @@
                     puppetNations.push(nation);
             });
         }
-        return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup, mainNation };
     }
     async function login(nation, password, mainNation) {
         if (!nation)
@@ -66,14 +71,20 @@
         const loginForm = loginbox.querySelector('form');
         if (!loginForm)
             return;
-        if (window.location.pathname === '/page=blank/scene') {
+        if (window.location.pathname.includes('/page=blank/scene')) {
             if (!window.location.href.includes('generated_by=SomeCardAssistantManager')) {
                 loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+            }
+            else {
+                loginForm.action = `${window.location.href}`;
             }
         }
         else {
             if (!loginForm.action.includes('generated_by=SomeCardAssistantManager')) {
                 loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+            }
+            else {
+                loginForm.action = `${loginForm.action}`;
             }
         }
         const nationInput = loginForm.querySelector('input[name="nation"]');
@@ -87,7 +98,6 @@
         HTMLFormElement.prototype.submit.call(loginForm);
     }
     async function loginAtIndex(index) {
-        const { puppetNations, nationPasswordMap, mainPassword, mainNation } = await getPuppetData();
         if (puppetNations.length === 0)
             return;
         if (index < 0)
@@ -96,8 +106,10 @@
             index = 0;
         currentIndex = index;
         const nation = puppetNations[index];
+        if (!nation)
+            return;
         let password = nationPasswordMap.get(nation) || mainPassword || '';
-        if (!nation || !password)
+        if (!password)
             return;
         await login(nation, password, mainNation);
     }
@@ -107,7 +119,6 @@
         const onPrevClick = async (e) => {
             e.preventDefault();
             prevPuppetBtn.removeEventListener('click', onPrevClick);
-            const { puppetNations } = await getPuppetData();
             if (puppetNations.length === 0)
                 return;
             if (currentIndex === -1) {
@@ -117,6 +128,8 @@
                 if (currentIndex === -1)
                     currentIndex = 0;
             }
+            const page = Math.floor((currentIndex - 1) / itemsPerPage) + 1;
+            await GM.setValue('page', page);
             await loginAtIndex(currentIndex - 1);
         };
         prevPuppetBtn.addEventListener('click', onPrevClick);
@@ -125,7 +138,6 @@
         const onNextClick = async (e) => {
             e.preventDefault();
             nextPuppetBtn.removeEventListener('click', onNextClick);
-            const { puppetNations } = await getPuppetData();
             if (puppetNations.length === 0)
                 return;
             if (currentIndex === -1) {
@@ -133,14 +145,14 @@
                 const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : '';
                 currentIndex = puppetNations.indexOf(loggedinNation);
             }
+            const page = Math.floor((currentIndex + 1) / itemsPerPage) + 1;
+            await GM.setValue('page', page);
             await loginAtIndex(currentIndex + 1);
         };
         nextPuppetBtn.addEventListener('click', onNextClick);
     }
     const scene = document.querySelector('#manageButton');
     if (scene) {
-        let { puppetNations, activeGroup, savedList } = await getPuppetData();
-        const itemsPerPage = 25;
         let totalPages = Math.ceil(puppetNations.length / itemsPerPage);
         let currentPage = await GM.getValue('page', 1);
         const outputDiv = document.createElement('div');
@@ -184,12 +196,14 @@
             if (!selectedGroup || !(selectedGroup instanceof HTMLSelectElement))
                 return;
             await GM.setValue('activeGroup', selectedGroup.value);
-            currentIndex = -1;
-            currentPage = 1;
-            activeGroup = selectedGroup.value;
-            puppetNations = savedList[activeGroup] ?? [];
-            totalPages = Math.ceil(puppetNations.length / itemsPerPage);
-            renderPage(currentPage);
+        });
+        GM_addValueChangeListener('puppetGroups', (name, oldVal, newVal) => {
+            savedList = JSON.parse(newVal);
+            updatePuppetNations(savedList, activeGroup);
+        });
+        GM_addValueChangeListener('activeGroup', (name, oldVal, newVal) => {
+            savedList = JSON.parse(newVal);
+            updatePuppetNations(savedList, activeGroup);
         });
         navDiv.appendChild(prevBtn);
         navDiv.appendChild(groupSelect);
@@ -198,6 +212,12 @@
         const nationsContainer = document.createElement('div');
         nationsContainer.id = 'nationContainer';
         outputDiv.appendChild(nationsContainer);
+        function updatePuppetNations(savedList, group) {
+            puppetNations = savedList[group] ?? [];
+            totalPages = Math.ceil(puppetNations.length / itemsPerPage);
+            currentPage = 1;
+            renderPage(currentPage);
+        }
         function renderPage(page) {
             nationsContainer.innerHTML = '';
             const start = (page - 1) * itemsPerPage;
@@ -289,7 +309,6 @@
         GM_addStyle(css);
     }
     if (window.location.pathname === '/page=blank/scene') {
-        const { nationPasswordMap } = await getPuppetData();
         const section = document.createElement('main');
         section.id = 'scsContainer';
         section.innerHTML = `
@@ -308,7 +327,7 @@
         <label for="mainPassword">Puppet Password:</label>
         <input type="password" id="mainPassword" name="mainPassword" />
         <label for="puppetList">Puppet names:</label>
-        <textarea id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
+        <textarea spellcheck="false" id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
         <button id="generate">Generate</button>
       </div>
       <div id="scene"></div>
@@ -329,40 +348,35 @@
             form.style.display = 'none';
             toggleFormBtn.textContent = 'Show Form';
         }
-        /**
-         * Misleading name that doesn't actually generate tables but prepares the table for generation.
-         * Updates the puppet list and updates the global nation to password mapping.
-         *
-         * @param {boolean} load - If true (meant for first loads), false meant for re-generating in place
-         * @returns {Promise<Record<string, string[]>>} Parsed puppet groups
-         */
-        async function generateTable(load) {
-            const puppetListTextarea = document.getElementById('puppetList');
-            let puppetGroups = {};
-            if (load) {
-                const savedGroupsJson = await GM.getValue('puppetGroups', '');
-                if (savedGroupsJson) {
-                    try {
-                        puppetGroups = JSON.parse(savedGroupsJson);
-                        let text = '';
-                        for (const groupName of Object.keys(puppetGroups)) {
-                            text += `[${groupName}]\n`;
-                            text += puppetGroups[groupName]?.join('\n') + '\n';
-                        }
-                        puppetListTextarea.value = text.trim();
-                    }
-                    catch (error) {
-                        puppetGroups = parsePuppetGroups(puppetListTextarea.value);
-                    }
+        const puppetListTextarea = document.getElementById('puppetList');
+        if (puppetGroups) {
+            try {
+                let text = '';
+                for (const groupName of Object.keys(puppetGroups)) {
+                    text += `[${groupName}]\n`;
+                    text += puppetGroups[groupName]?.join('\n') + '\n';
                 }
-                else {
-                    puppetGroups = parsePuppetGroups(puppetListTextarea.value);
-                }
+                puppetListTextarea.value = text.trim();
             }
-            else {
+            catch (error) {
                 puppetGroups = parsePuppetGroups(puppetListTextarea.value);
-                await GM.setValue('puppetGroups', JSON.stringify(puppetGroups));
             }
+        }
+        else {
+            puppetGroups = parsePuppetGroups(puppetListTextarea.value);
+        }
+        const nationInput = document.getElementById('mainNation');
+        nationInput.value = mainNation;
+        const passwordInput = document.getElementById('mainPassword');
+        passwordInput.value = mainPassword;
+        const generateButton = document.getElementById('generate');
+        generateButton.addEventListener('click', buildTable);
+        await buildTable();
+        async function buildTable() {
+            await GM.setValue('mainNation', nationInput.value.trim());
+            await GM.setValue('mainPassword', passwordInput.value.trim());
+            puppetGroups = parsePuppetGroups(puppetListTextarea.value);
+            await GM.setValue('puppetGroups', JSON.stringify(puppetGroups));
             nationPasswordMap.clear();
             for (const group in puppetGroups) {
                 puppetGroups[group]?.forEach(line => {
@@ -372,27 +386,9 @@
                     }
                 });
             }
-            if (Object.keys(puppetGroups).length > 0) {
-                buildTable(puppetGroups);
-                return puppetGroups;
-            }
-        }
-        generateTable(true);
-        const mainNation = await GM.getValue('mainNation', '');
-        const nationInput = document.getElementById('mainNation');
-        nationInput.value = mainNation;
-        const mainPassword = await GM.getValue('mainPassword', '');
-        const passwordInput = document.getElementById('mainPassword');
-        passwordInput.value = mainPassword;
-        const generateButton = document.getElementById('generate');
-        generateButton.addEventListener('click', async () => {
-            await GM.setValue('mainNation', nationInput.value.trim());
-            await GM.setValue('mainPassword', passwordInput.value.trim());
-            const puppets = await generateTable(false);
-            await GM.setValue('puppetList', puppets);
-        });
-        async function buildTable(puppetGroups) {
-            const { activeGroup: storedActiveGroup, mainNation } = await getPuppetData();
+            if (Object.keys(puppetGroups).length === 0)
+                return;
+            await GM.setValue('puppetList', puppetGroups);
             if (!mainNation) {
                 alert('Provide Main');
                 return;
@@ -400,12 +396,12 @@
             const groupNames = Object.keys(puppetGroups);
             let sections = ``;
             let puppetList = [];
-            let activeGroup = storedActiveGroup && groupNames.includes(storedActiveGroup) ? storedActiveGroup : groupNames[0] || '';
+            let active = activeGroup && groupNames.includes(activeGroup) ? activeGroup : groupNames[0] || '';
             groupNames.forEach(groupName => {
-                const isActive = groupName === activeGroup;
+                const isActive = groupName === active;
                 sections += `<button data-group="${groupName}" class="${isActive ? 'active' : ''}">${groupName}</button>`;
             });
-            puppetList = activeGroup ? puppetGroups[activeGroup] : [];
+            puppetList = puppetGroups[active] || [];
             let content = `<div id="holder">
         <div id="sections">
             ${sections}
@@ -426,13 +422,7 @@
       `;
             content += `</tbody></table>`;
             const sceneDiv = document.getElementById('scene');
-            sceneDiv.innerHTML = `
-          <div>
-            <button id="prevBtn">Prev</button>
-            <button id="nextBtn">Next</button>
-          </div>
-          ${content}
-        `;
+            sceneDiv.innerHTML = `${content}`;
             const sectionsDiv = document.getElementById('sections');
             const domain = document.getElementById('domain').value || 'www';
             const tbody = document.querySelector('tbody');
@@ -471,7 +461,7 @@
                         const nation = target.dataset.nation || '';
                         let password = mainPassword;
                         if (!password)
-                            password = nationPasswordMap.get(nation);
+                            password = nationPasswordMap.get(nation) || '';
                         try {
                             await login(nation, password, mainNation);
                         }
@@ -480,28 +470,6 @@
                         }
                     }
                 });
-                const prevButton = document.getElementById('prevBtn');
-                const nextButton = document.getElementById('nextBtn');
-                function onPrevClick() {
-                    if (rows.length === 0)
-                        return;
-                    currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1;
-                    const button = rows[currentIndex]?.querySelector('#loginButton');
-                    if (button)
-                        button.click();
-                    prevButton.removeEventListener('click', onPrevClick);
-                }
-                function onNextClick() {
-                    if (rows.length === 0)
-                        return;
-                    currentIndex = (currentIndex + 1) % rows.length;
-                    const button = rows[currentIndex]?.querySelector('#loginButton');
-                    if (button)
-                        button.click();
-                    nextButton.removeEventListener('click', onNextClick);
-                }
-                prevButton.addEventListener('click', onPrevClick);
-                nextButton.addEventListener('click', onNextClick);
                 const searchBox = document.getElementById('puppetSearch');
                 searchBox.addEventListener('input', () => filterRows(searchBox, rows));
             }
@@ -517,7 +485,7 @@
                     const searchBox = document.getElementById('puppetSearch');
                     if (searchBox)
                         searchBox.value = '';
-                    renderRows(puppetGroups[activeGroup]);
+                    renderRows(puppetGroups[activeGroup] || []);
                 }
             });
         }
@@ -644,7 +612,7 @@
         background-color: darkslateblue;
       }
 
-      .fittingName {
+      #fittingName {
         flex: 1;
       }
 

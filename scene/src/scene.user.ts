@@ -4,7 +4,8 @@
 // @grant       GM.setValue
 // @grant       GM.getValue
 // @grant       GM_addStyle
-// @version     1.04
+// @grant       GM_addValueChangeListener
+// @version     1.0
 // @author      Kractero
 // @description Puppet manager with groups I guess
 // ==/UserScript==
@@ -12,6 +13,20 @@
 ;(async function () {
   const loggedin = document.getElementById('loggedin')
   if (!loggedin?.dataset.nname) return
+
+  const itemsPerPage = 25
+  let puppetNations: string[] = []
+  let nationPasswordMap = new Map<string, string>()
+  let mainPassword = (await GM.getValue('mainPassword', '')) || ''
+  let mainNation = (await GM.getValue('mainNation', '')) || ''
+  let savedList: Record<string, string[]> = (await GM.getValue('puppetList', {})) || {}
+  let activeGroup = (await GM.getValue('activeGroup', '')) || ''
+  if (!activeGroup || !(activeGroup in savedList)) {
+    activeGroup = Object.keys(savedList)[0] || ''
+  }
+  let puppetGroups: Record<string, string[]> = JSON.parse((await GM.getValue('puppetGroups', '')) || '')
+  updatePuppetData(savedList, activeGroup)
+
   const links = `
     <div class="bel">
       <div class="belcontent" id="manageButton">
@@ -35,27 +50,18 @@
 
   let currentIndex = -1
 
-  async function getPuppetData() {
-    const savedList: Record<string, string[]> = (await GM.getValue('puppetList', {})) || {}
-    const mainNation = (await GM.getValue('mainNation', '')) || ''
-    const mainPassword = (await GM.getValue('mainPassword', '')) || ''
-    let activeGroup = (await GM.getValue('activeGroup', '')) || ''
-    if (!activeGroup || !(activeGroup in savedList)) {
-      activeGroup = Object.keys(savedList)[0] || ''
-    }
-    const nationPasswordMap = new Map()
-    const puppetNations: Array<string> = []
+  function updatePuppetData(savedList: Record<string, string[]>, activeGroup: string) {
+    nationPasswordMap.clear()
+    puppetNations = []
 
     if (activeGroup && savedList[activeGroup]) {
-      savedList[activeGroup]?.forEach(line => {
+      savedList[activeGroup].forEach(line => {
         const parts = line.split(',').map(s => s.trim())
         const nation = parts[0] ? canonicalize(parts[0]) : ''
         if (parts[1]) nationPasswordMap.set(nation, parts[1])
         if (nation) puppetNations.push(nation)
       })
     }
-
-    return { savedList, puppetNations, nationPasswordMap, mainPassword, activeGroup, mainNation }
   }
 
   async function login(nation: string, password: string, mainNation: string) {
@@ -64,13 +70,17 @@
     if (!loginbox) return
     const loginForm = loginbox.querySelector('form')
     if (!loginForm) return
-    if (window.location.pathname === '/page=blank/scene') {
+    if (window.location.pathname.includes('/page=blank/scene')) {
       if (!window.location.href.includes('generated_by=SomeCardAssistantManager')) {
         loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`
+      } else {
+        loginForm.action = `${window.location.href}`
       }
     } else {
       if (!loginForm.action.includes('generated_by=SomeCardAssistantManager')) {
         loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`
+      } else {
+        loginForm.action = `${loginForm.action}`
       }
     }
 
@@ -84,7 +94,6 @@
   }
 
   async function loginAtIndex(index: number) {
-    const { puppetNations, nationPasswordMap, mainPassword, mainNation } = await getPuppetData()
     if (puppetNations.length === 0) return
 
     if (index < 0) index = puppetNations.length - 1
@@ -92,8 +101,9 @@
     currentIndex = index
 
     const nation = puppetNations[index]
+    if (!nation) return
     let password = nationPasswordMap.get(nation) || mainPassword || ''
-    if (!nation || !password) return
+    if (!password) return
 
     await login(nation, password, mainNation)
   }
@@ -106,7 +116,6 @@
       e.preventDefault()
       prevPuppetBtn.removeEventListener('click', onPrevClick)
 
-      const { puppetNations } = await getPuppetData()
       if (puppetNations.length === 0) return
 
       if (currentIndex === -1) {
@@ -116,6 +125,8 @@
         if (currentIndex === -1) currentIndex = 0
       }
 
+      const page = Math.floor((currentIndex - 1) / itemsPerPage) + 1
+      await GM.setValue('page', page)
       await loginAtIndex(currentIndex - 1)
     }
 
@@ -127,7 +138,6 @@
       e.preventDefault()
       nextPuppetBtn.removeEventListener('click', onNextClick)
 
-      const { puppetNations } = await getPuppetData()
       if (puppetNations.length === 0) return
 
       if (currentIndex === -1) {
@@ -135,6 +145,9 @@
         const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : ''
         currentIndex = puppetNations.indexOf(loggedinNation)
       }
+
+      const page = Math.floor((currentIndex + 1) / itemsPerPage) + 1
+      await GM.setValue('page', page)
       await loginAtIndex(currentIndex + 1)
     }
 
@@ -144,8 +157,6 @@
   const scene = document.querySelector('#manageButton')
 
   if (scene) {
-    let { puppetNations, activeGroup, savedList } = await getPuppetData()
-    const itemsPerPage = 25
     let totalPages = Math.ceil(puppetNations.length / itemsPerPage)
     let currentPage = await GM.getValue('page', 1)
 
@@ -194,13 +205,18 @@
       e.preventDefault()
       const selectedGroup = e.target
       if (!selectedGroup || !(selectedGroup instanceof HTMLSelectElement)) return
+
       await GM.setValue('activeGroup', selectedGroup.value)
-      currentIndex = -1
-      currentPage = 1
-      activeGroup = selectedGroup.value
-      puppetNations = savedList[activeGroup] ?? []
-      totalPages = Math.ceil(puppetNations.length / itemsPerPage)
-      renderPage(currentPage)
+    })
+
+    GM_addValueChangeListener('puppetGroups', (name, oldVal, newVal) => {
+      savedList = JSON.parse(newVal)
+      updatePuppetNations(savedList, activeGroup)
+    })
+
+    GM_addValueChangeListener('activeGroup', (name, oldVal, newVal) => {
+      savedList = JSON.parse(newVal)
+      updatePuppetNations(savedList, activeGroup)
     })
 
     navDiv.appendChild(prevBtn)
@@ -211,6 +227,13 @@
     const nationsContainer = document.createElement('div')
     nationsContainer.id = 'nationContainer'
     outputDiv.appendChild(nationsContainer)
+
+    function updatePuppetNations(savedList: Record<string, string[]>, group: string) {
+      puppetNations = savedList[group] ?? []
+      totalPages = Math.ceil(puppetNations.length / itemsPerPage)
+      currentPage = 1
+      renderPage(currentPage)
+    }
 
     function renderPage(page: number) {
       nationsContainer.innerHTML = ''
@@ -314,8 +337,6 @@
   }
 
   if (window.location.pathname === '/page=blank/scene') {
-    const { nationPasswordMap } = await getPuppetData()
-
     const section = document.createElement('main')
     section.id = 'scsContainer'
     section.innerHTML = `
@@ -334,7 +355,7 @@
         <label for="mainPassword">Puppet Password:</label>
         <input type="password" id="mainPassword" name="mainPassword" />
         <label for="puppetList">Puppet names:</label>
-        <textarea id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
+        <textarea spellcheck="false" id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
         <button id="generate">Generate</button>
       </div>
       <div id="scene"></div>
@@ -359,41 +380,39 @@
       toggleFormBtn.textContent = 'Show Form'
     }
 
-    /**
-     * Misleading name that doesn't actually generate tables but prepares the table for generation.
-     * Updates the puppet list and updates the global nation to password mapping.
-     *
-     * @param {boolean} load - If true (meant for first loads), false meant for re-generating in place
-     * @returns {Promise<Record<string, string[]>>} Parsed puppet groups
-     */
-    async function generateTable(load: boolean) {
-      const puppetListTextarea = document.getElementById('puppetList') as HTMLTextAreaElement
+    const puppetListTextarea = document.getElementById('puppetList') as HTMLTextAreaElement
 
-      let puppetGroups: Record<string, string[]> = {}
-
-      if (load) {
-        const savedGroupsJson = await GM.getValue('puppetGroups', '')
-
-        if (savedGroupsJson) {
-          try {
-            puppetGroups = JSON.parse(savedGroupsJson)
-
-            let text = ''
-            for (const groupName of Object.keys(puppetGroups)) {
-              text += `[${groupName}]\n`
-              text += puppetGroups[groupName]?.join('\n') + '\n'
-            }
-            puppetListTextarea.value = text.trim()
-          } catch (error) {
-            puppetGroups = parsePuppetGroups(puppetListTextarea.value)
-          }
-        } else {
-          puppetGroups = parsePuppetGroups(puppetListTextarea.value)
+    if (puppetGroups) {
+      try {
+        let text = ''
+        for (const groupName of Object.keys(puppetGroups)) {
+          text += `[${groupName}]\n`
+          text += puppetGroups[groupName]?.join('\n') + '\n'
         }
-      } else {
+        puppetListTextarea.value = text.trim()
+      } catch (error) {
         puppetGroups = parsePuppetGroups(puppetListTextarea.value)
-        await GM.setValue('puppetGroups', JSON.stringify(puppetGroups))
       }
+    } else {
+      puppetGroups = parsePuppetGroups(puppetListTextarea.value)
+    }
+
+    const nationInput = document.getElementById('mainNation') as HTMLInputElement
+    nationInput.value = mainNation
+
+    const passwordInput = document.getElementById('mainPassword') as HTMLInputElement
+    passwordInput.value = mainPassword
+
+    const generateButton = document.getElementById('generate') as HTMLButtonElement
+    generateButton.addEventListener('click', buildTable)
+
+    await buildTable()
+
+    async function buildTable() {
+      await GM.setValue('mainNation', nationInput.value.trim())
+      await GM.setValue('mainPassword', passwordInput.value.trim())
+      puppetGroups = parsePuppetGroups(puppetListTextarea.value)
+      await GM.setValue('puppetGroups', JSON.stringify(puppetGroups))
 
       nationPasswordMap.clear()
 
@@ -406,32 +425,9 @@
         })
       }
 
-      if (Object.keys(puppetGroups).length > 0) {
-        buildTable(puppetGroups)
-        return puppetGroups
-      }
-    }
+      if (Object.keys(puppetGroups).length === 0) return
+      await GM.setValue('puppetList', puppetGroups)
 
-    generateTable(true)
-
-    const mainNation = await GM.getValue('mainNation', '')
-    const nationInput = document.getElementById('mainNation') as HTMLInputElement
-    nationInput.value = mainNation
-
-    const mainPassword = await GM.getValue('mainPassword', '')
-    const passwordInput = document.getElementById('mainPassword') as HTMLInputElement
-    passwordInput.value = mainPassword
-
-    const generateButton = document.getElementById('generate') as HTMLButtonElement
-    generateButton.addEventListener('click', async () => {
-      await GM.setValue('mainNation', nationInput.value.trim())
-      await GM.setValue('mainPassword', passwordInput.value.trim())
-      const puppets = await generateTable(false)
-      await GM.setValue('puppetList', puppets)
-    })
-
-    async function buildTable(puppetGroups: any) {
-      const { activeGroup: storedActiveGroup, mainNation } = await getPuppetData()
       if (!mainNation) {
         alert('Provide Main')
         return
@@ -440,15 +436,14 @@
       let sections = ``
       let puppetList: string[] = []
 
-      let activeGroup =
-        storedActiveGroup && groupNames.includes(storedActiveGroup) ? storedActiveGroup : groupNames[0] || ''
+      let active = activeGroup && groupNames.includes(activeGroup) ? activeGroup : groupNames[0] || ''
 
       groupNames.forEach(groupName => {
-        const isActive = groupName === activeGroup
+        const isActive = groupName === active
         sections += `<button data-group="${groupName}" class="${isActive ? 'active' : ''}">${groupName}</button>`
       })
 
-      puppetList = activeGroup ? puppetGroups[activeGroup] : []
+      puppetList = puppetGroups[active] || []
 
       let content = `<div id="holder">
         <div id="sections">
@@ -471,13 +466,7 @@
       content += `</tbody></table>`
 
       const sceneDiv = document.getElementById('scene') as HTMLDivElement
-      sceneDiv.innerHTML = `
-          <div>
-            <button id="prevBtn">Prev</button>
-            <button id="nextBtn">Next</button>
-          </div>
-          ${content}
-        `
+      sceneDiv.innerHTML = `${content}`
 
       const sectionsDiv = document.getElementById('sections') as HTMLDivElement
 
@@ -517,7 +506,7 @@
             allButtons.forEach(btn => ((btn as HTMLButtonElement).disabled = true))
             const nation = target.dataset.nation || ''
             let password = mainPassword
-            if (!password) password = nationPasswordMap.get(nation)
+            if (!password) password = nationPasswordMap.get(nation) || ''
             try {
               await login(nation, password, mainNation)
             } finally {
@@ -525,28 +514,6 @@
             }
           }
         })
-
-        const prevButton = document.getElementById('prevBtn') as HTMLButtonElement
-        const nextButton = document.getElementById('nextBtn') as HTMLButtonElement
-
-        function onPrevClick() {
-          if (rows.length === 0) return
-          currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1
-          const button = rows[currentIndex]?.querySelector('#loginButton') as HTMLButtonElement
-          if (button) button.click()
-          prevButton.removeEventListener('click', onPrevClick)
-        }
-
-        function onNextClick() {
-          if (rows.length === 0) return
-          currentIndex = (currentIndex + 1) % rows.length
-          const button = rows[currentIndex]?.querySelector('#loginButton') as HTMLButtonElement
-          if (button) button.click()
-          nextButton.removeEventListener('click', onNextClick)
-        }
-
-        prevButton.addEventListener('click', onPrevClick)
-        nextButton.addEventListener('click', onNextClick)
 
         const searchBox = document.getElementById('puppetSearch') as HTMLInputElement
 
@@ -565,7 +532,7 @@
           currentIndex = -1
           const searchBox = document.getElementById('puppetSearch') as HTMLInputElement
           if (searchBox) searchBox.value = ''
-          renderRows(puppetGroups[activeGroup])
+          renderRows(puppetGroups[activeGroup] || [])
         }
       })
     }
@@ -693,7 +660,7 @@
         background-color: darkslateblue;
       }
 
-      .fittingName {
+      #fittingName {
         flex: 1;
       }
 
