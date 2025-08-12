@@ -319,7 +319,7 @@
     const section = document.createElement('main')
     section.id = 'scsContainer'
     section.innerHTML = `
-      <h2>SCS Puppet Manager</h2>
+      <h2>Scene</h2>
       <button id="toggleForm">Hide Form</button>
       <div id="scsForm" id="puppetForm">
         <label for="domain">Domain:</label>
