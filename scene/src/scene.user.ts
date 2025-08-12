@@ -393,6 +393,7 @@
         <label for="puppetList">Puppet names:</label>
         <textarea spellcheck="false" id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
         <button id="generate">Generate</button>
+        <p class="error"></p>
       </div>
       <div id="scene"></div>
     `
@@ -445,6 +446,15 @@
     await buildTable()
 
     async function buildTable() {
+      const errorElement = document.querySelector('#content .error') as HTMLElement | null
+      if (!errorElement) return
+      if (!nationInput.value.trim()) {
+        errorElement.textContent = 'Provide a main nation'
+        errorElement.style.display = 'block'
+        return
+      } else {
+        errorElement.style.display = 'none'
+      }
       await GM.setValue('mainNation', nationInput.value.trim())
       await GM.setValue('mainPassword', passwordInput.value.trim())
       puppetGroups = parsePuppetGroups(puppetListTextarea.value)
@@ -464,10 +474,6 @@
       if (Object.keys(puppetGroups).length === 0) return
       await GM.setValue('puppetList', puppetGroups)
 
-      if (!mainNation) {
-        alert('Provide Main')
-        return
-      }
       const groupNames = Object.keys(puppetGroups)
       let sections = ``
       let puppetList: string[] = []
@@ -713,6 +719,10 @@
 
       .linkys {
         all: unset;
+      }
+
+      #content .error {
+        display: none;
       }
     `
 

@@ -33,6 +33,6 @@
     "noUncheckedSideEffectImports": true,
     "skipLibCheck": true
   },
-  "include": ["*/src/*", "SCAM.user.js"],
+  "include": ["*/src/*", "SCAM.user.js", "scene/scene.user.js", "scene/scene.user.js"],
   "exclude": ["node_modules"]
 }
