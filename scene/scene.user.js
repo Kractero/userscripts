@@ -1,12 +1,14 @@
 "use strict";
 // ==UserScript==
-// @name        Some Card Assistant Manager
+// @name        Scene
 // @match       https://*.nationstates.net/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     1.02
+// @grant       GM_addStyle
+// @version     1.04
 // @author      Kractero
-// @description Some Card Assistant Manager
+// @description Puppet manager with groups I guess
+// @require     https://cdn.jsdelivr.net/npm/@violentmonkey/dom@2
 // ==/UserScript==
 ;
 (async function () {
@@ -15,18 +17,18 @@
         return;
     const links = `
     <div class="bel">
-      <div class="belcontent">
-        <a href="/page=blank/scam" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
+      <div class="belcontent" id="manageButton">
+        <a href="/page=blank/scene" class="bellink"><i class="icon-industrial-building"></i>PUPPETS</a>
       </div>
     </div>
     <div class="bel">
       <div class="belcontent">
-        <button id="prev-puppet" class="bellink linkys">PREV</button>
+        <button id="prevPuppet" class="bellink linkys">PREV</button>
       </div>
     </div>
     <div class="bel">
       <div class="belcontent">
-        <button id="next-puppet" class="bellink linkys">NEXT</button>
+        <button id="nextPuppet" class="bellink linkys">NEXT</button>
       </div>
     </div>
   `;
@@ -60,16 +62,28 @@
         if (!nation)
             return;
         const loginbox = document.getElementById('loginbox');
+        if (!loginbox)
+            return;
         const loginForm = loginbox.querySelector('form');
-        if (window.location.pathname === '/page=blank/scam') {
-            loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+        if (!loginForm)
+            return;
+        if (window.location.pathname === '/page=blank/scene') {
+            if (!window.location.href.includes('generated_by=SomeCardAssistantManager')) {
+                loginForm.action = `${window.location.href}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+            }
         }
         else {
-            loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+            if (!loginForm.action.includes('generated_by=SomeCardAssistantManager')) {
+                loginForm.action = `${loginForm.action}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}`;
+            }
         }
         const nationInput = loginForm.querySelector('input[name="nation"]');
+        if (!nationInput || !(nationInput instanceof HTMLInputElement))
+            return;
         nationInput.value = nation ? nation : '';
         const passwordInput = loginForm.querySelector('input[name="password"]');
+        if (!passwordInput || !(passwordInput instanceof HTMLInputElement))
+            return;
         passwordInput.value = password;
         HTMLFormElement.prototype.submit.call(loginForm);
     }
@@ -88,8 +102,8 @@
             return;
         await login(nation, password, mainNation);
     }
-    const prevPuppetBtn = document.getElementById('prev-puppet');
-    const nextPuppetBtn = document.getElementById('next-puppet');
+    const prevPuppetBtn = document.getElementById('prevPuppet');
+    const nextPuppetBtn = document.getElementById('nextPuppet');
     if (prevPuppetBtn) {
         const onPrevClick = async (e) => {
             e.preventDefault();
@@ -124,14 +138,165 @@
         };
         nextPuppetBtn.addEventListener('click', onNextClick);
     }
-    if (window.location.pathname === '/page=blank/scam') {
+    const scene = document.querySelector('#manageButton');
+    if (scene) {
+        let { puppetNations, activeGroup, savedList } = await getPuppetData();
+        const itemsPerPage = 25;
+        let totalPages = Math.ceil(puppetNations.length / itemsPerPage);
+        let currentPage = await GM.getValue('page', 1);
+        const outputDiv = document.createElement('div');
+        Object.assign(outputDiv.style, {
+            color: 'white',
+            display: 'none',
+            flexDirection: 'column',
+            alignItems: 'center',
+            position: 'absolute',
+            overflow: 'scroll',
+            minWidth: '300px',
+            padding: '9px',
+            textAlign: 'center',
+            borderRadius: '8px',
+            background: 'black',
+            right: '0',
+            zIndex: '100',
+            textShadow: 'none',
+            boxShadow: '0 0 12px black',
+            marginBottom: '6px',
+        });
+        const navDiv = document.createElement('div');
+        navDiv.id = 'navDiv';
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = 'Prev Page';
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next Page';
+        const groupSelect = document.createElement('select');
+        for (const group of Object.keys(savedList)) {
+            const option = document.createElement('option');
+            option.value = group;
+            option.textContent = group;
+            if (group === activeGroup) {
+                option.selected = true;
+            }
+            groupSelect.appendChild(option);
+        }
+        groupSelect.addEventListener('change', async (e) => {
+            e.preventDefault();
+            const selectedGroup = e.target;
+            if (!selectedGroup || !(selectedGroup instanceof HTMLSelectElement))
+                return;
+            await GM.setValue('activeGroup', selectedGroup.value);
+            currentIndex = -1;
+            currentPage = 1;
+            activeGroup = selectedGroup.value;
+            puppetNations = savedList[activeGroup] ?? [];
+            totalPages = Math.ceil(puppetNations.length / itemsPerPage);
+            renderPage(currentPage);
+        });
+        navDiv.appendChild(prevBtn);
+        navDiv.appendChild(groupSelect);
+        navDiv.appendChild(nextBtn);
+        outputDiv.appendChild(navDiv);
+        const nationsContainer = document.createElement('div');
+        nationsContainer.id = 'nationContainer';
+        outputDiv.appendChild(nationsContainer);
+        function renderPage(page) {
+            nationsContainer.innerHTML = '';
+            const start = (page - 1) * itemsPerPage;
+            const end = Math.min(start + itemsPerPage, puppetNations.length);
+            for (let i = start; i < end; i++) {
+                const nation = puppetNations[i];
+                if (!nation)
+                    break;
+                const btn = document.createElement('button');
+                btn.dataset.nation = nation;
+                btn.textContent = nation;
+                btn.className = 'linky';
+                const onClick = async (e) => {
+                    e.preventDefault();
+                    btn.removeEventListener('click', onClick);
+                    if (puppetNations.length === 0)
+                        return;
+                    currentIndex = puppetNations.indexOf(nation);
+                    if (currentIndex === -1)
+                        currentIndex = 0;
+                    await loginAtIndex(currentIndex);
+                };
+                btn.addEventListener('click', onClick);
+                nationsContainer.appendChild(btn);
+            }
+            GM.setValue('page', page);
+        }
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+        });
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+        });
+        renderPage(currentPage);
+        scene.appendChild(outputDiv);
+        const container = scene;
+        scene.addEventListener('mouseenter', () => {
+            outputDiv.style.display = 'flex';
+        });
+        scene.addEventListener('mouseleave', (event) => {
+            if (!(event instanceof MouseEvent))
+                return;
+            const toElement = event.relatedTarget;
+            if (!toElement || !(toElement instanceof Node) || !container.contains(toElement)) {
+                outputDiv.style.display = 'none';
+            }
+        });
+        const css = `
+      #navDiv {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      #navDiv button {
+        padding: 0.25rem 0.25rem;
+        margin: 0.25rem 0.25rem;
+        width: max-content;
+        cursor: pointer;
+      }
+
+      #nationContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .linky {
+        all: unset;
+        cursor: pointer;
+        color: inherit;
+        text-decoration: none;
+        font-weight: normal;
+        font-size: 1rem;
+      }
+
+      .linky:hover {
+        color: green;
+      }
+    `;
+        GM_addStyle(css);
+    }
+    if (window.location.pathname === '/page=blank/scene') {
         const { nationPasswordMap } = await getPuppetData();
         const section = document.createElement('main');
-        section.className = 'scs-container';
+        section.id = 'scsContainer';
         section.innerHTML = `
       <h2>SCS Puppet Manager</h2>
       <button id="toggleForm">Hide Form</button>
-      <div class="scs-form" id="puppetForm">
+      <div id="scsForm" id="puppetForm">
         <label for="domain">Domain:</label>
         <select id="domain" name="domain">
           <option value="www">www</option>
@@ -144,10 +309,10 @@
         <label for="mainPassword">Puppet Password:</label>
         <input type="password" id="mainPassword" name="mainPassword" />
         <label for="puppetList">Puppet names:</label>
-        <textarea id="puppetList" rows="10" class="scs-textarea" placeholder="nation one\nnation two\nnation three"></textarea>
+        <textarea id="puppetList" rows="10" id="scsTextarea" placeholder="nation one\nnation two\nnation three"></textarea>
         <button id="generate">Generate</button>
       </div>
-      <div id="scam"></div>
+      <div id="scene"></div>
     `;
         const content = document.getElementById('content');
         if (content)
@@ -217,19 +382,15 @@
         const mainNation = await GM.getValue('mainNation', '');
         const nationInput = document.getElementById('mainNation');
         nationInput.value = mainNation;
-        if (!mainNation) {
-            alert('Provide Main');
-            return;
-        }
         const mainPassword = await GM.getValue('mainPassword', '');
         const passwordInput = document.getElementById('mainPassword');
         passwordInput.value = mainPassword;
         const generateButton = document.getElementById('generate');
         generateButton.addEventListener('click', async () => {
-            const puppets = await generateTable(false);
-            await GM.setValue('puppetList', puppets);
             await GM.setValue('mainNation', nationInput.value.trim());
             await GM.setValue('mainPassword', passwordInput.value.trim());
+            const puppets = await generateTable(false);
+            await GM.setValue('puppetList', puppets);
         });
         async function buildTable(puppetGroups) {
             const { activeGroup: storedActiveGroup, mainNation } = await getPuppetData();
@@ -246,11 +407,11 @@
                 sections += `<button data-group="${groupName}" class="${isActive ? 'active' : ''}">${groupName}</button>`;
             });
             puppetList = activeGroup ? puppetGroups[activeGroup] : [];
-            let content = `<div id="holder" class="holder">
+            let content = `<div id="holder">
         <div id="sections">
             ${sections}
           </div>
-          <div class="fittingName">
+          <div id="fittingName">
             <input type="text" id="puppetSearch" placeholder="Search puppets...">
             <table border="1" cellspacing="0" cellpadding="5">\n
               <thead>
@@ -265,8 +426,8 @@
         </div>
       `;
             content += `</tbody></table>`;
-            const scamDiv = document.getElementById('scam');
-            scamDiv.innerHTML = `
+            const sceneDiv = document.getElementById('scene');
+            sceneDiv.innerHTML = `
           <div>
             <button id="prevBtn">Prev</button>
             <button id="nextBtn">Next</button>
@@ -288,13 +449,13 @@
             <td><a href="${base}?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">${nation}</a></td>
             <td><a href="${base}/page=deck?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Deck</a></td>
             <td><a href="${base}/page=deck/value_deck=1?generated_by=SomeCardAssistantManager__author_main_nation_Kractero__usedBy_${mainNation}" target="_blank">Value Deck</a></td>
-            <td><button class="login-button" data-nation="${nation}">Login</button></td>
+            <td><button id="loginButton" data-nation="${nation}">Login</button></td>
           </tr>`;
                     tbody.insertAdjacentHTML('beforeend', row);
                 });
                 const loggedin = document.getElementById('loggedin');
                 const loggedinNation = loggedin?.dataset?.nname ? canonicalize(loggedin.dataset.nname) : '';
-                const rows = Array.from(scamDiv.querySelectorAll('tbody tr'));
+                const rows = Array.from(sceneDiv.querySelectorAll('tbody tr'));
                 rows.forEach((row, idx) => {
                     if (row.dataset.nation === loggedinNation) {
                         row.classList.add('highlight');
@@ -303,10 +464,10 @@
                     else
                         row.classList.remove('highlight');
                 });
-                scamDiv.addEventListener('click', async (event) => {
+                sceneDiv.addEventListener('click', async (event) => {
                     const target = event.target;
-                    if (target.matches('.login-button')) {
-                        const allButtons = scamDiv.querySelectorAll('.login-button');
+                    if (target.matches('.loginButton')) {
+                        const allButtons = sceneDiv.querySelectorAll('.loginButton');
                         allButtons.forEach(btn => (btn.disabled = true));
                         const nation = target.dataset.nation || '';
                         let password = mainPassword;
@@ -326,7 +487,7 @@
                     if (rows.length === 0)
                         return;
                     currentIndex = currentIndex <= 0 ? rows.length - 1 : currentIndex - 1;
-                    const button = rows[currentIndex]?.querySelector('.login-button');
+                    const button = rows[currentIndex]?.querySelector('#loginButton');
                     if (button)
                         button.click();
                     prevButton.removeEventListener('click', onPrevClick);
@@ -335,7 +496,7 @@
                     if (rows.length === 0)
                         return;
                     currentIndex = (currentIndex + 1) % rows.length;
-                    const button = rows[currentIndex]?.querySelector('.login-button');
+                    const button = rows[currentIndex]?.querySelector('#loginButton');
                     if (button)
                         button.click();
                     nextButton.removeEventListener('click', onNextClick);
@@ -348,7 +509,7 @@
             renderRows(puppetList);
             sectionsDiv.addEventListener('click', async (e) => {
                 const button = e.target;
-                if (button.tagName === 'BUTTON' && button.dataset.group) {
+                if (button instanceof HTMLElement && button.tagName === 'BUTTON' && button.dataset.group) {
                     sectionsDiv.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     button.classList.add('active');
                     activeGroup = button.dataset.group;
@@ -362,7 +523,7 @@
             });
         }
         const css = `
-      .scs-container {
+      #scsContainer {
         margin-top: 1rem;
         padding: 0.5rem;
         border: 1px solid;
@@ -370,12 +531,12 @@
         max-width: 1000px;
       }
 
-      .scs-container h2 {
+      #scsContainer h2 {
         margin-bottom: 1rem;
         font-size: 1.5rem;
       }
 
-      .scs-form {
+      #scsForm {
         margin-top: 1rem;
         display: flex;
         flex-direction: column;
@@ -383,9 +544,9 @@
         padding: 1rem;
       }
 
-      .scs-container input,
-      .scs-container textarea,
-      .scs-container select {
+      #scsContainer input,
+      #scsContainer textarea,
+      #scsContainer select {
         width: 100%;
         max-width: 600px;
         padding: 0.6rem 0.8rem;
@@ -393,13 +554,13 @@
         resize: vertical;
       }
 
-      .scs-container input:focus,
-      .scs-container textarea:focus {
+      #scsContainer input:focus,
+      #scsContainer textarea:focus {
         box-shadow: 0 0 4px rgba(26, 115, 232, 0.4);
         outline: none;
       }
 
-      .scs-container button {
+      #scsContainer button {
         padding: 0.5rem 0.5rem;
         margin: 0.25rem 0.25rem;
         width: max-content;
@@ -446,14 +607,14 @@
         font-weight: 600;
       }
 
-      #scam {
+      #scene {
         margin-top: 2rem;
         overflow-x: auto;
         flex: 1;
         min-width: 0;
       }
 
-      #scam table {
+      #scene table {
         width: 100%;
         border-collapse: collapse;
         border-radius: 6px;
@@ -461,14 +622,14 @@
         font-size: 0.9rem;
       }
 
-      #scam th,
-      #scam td {
+      #scene th,
+      #scene td {
         padding: 0.6rem 0.8rem;
         text-align: left;
         border-bottom: 1px solid #ddd;
       }
 
-      .login-button {
+      .loginButton {
         padding: 0.3rem 0.6rem;
         font-size: 0.8rem;
         border: none;
@@ -476,11 +637,11 @@
         cursor: pointer;
       }
 
-      #scam div {
+      #scene div {
         margin-bottom: 1rem;
       }
 
-      #scam tbody tr.highlight {
+      #scene tbody tr.highlight {
         background-color: darkslateblue;
       }
 
@@ -494,12 +655,10 @@
       }
 
       .linkys {
-        decoration: none;
+        all: unset;
       }
     `;
-        const styleTag = document.createElement('style');
-        styleTag.textContent = css;
-        document.head.appendChild(styleTag);
+        GM_addStyle(css);
     }
 })();
 function canonicalize(str) {
