@@ -194,14 +194,14 @@
             if (!selectedGroup || !(selectedGroup instanceof HTMLSelectElement))
                 return;
             await GM.setValue('activeGroup', selectedGroup.value);
+            updatePuppetNations(savedList, selectedGroup.value);
         });
         GM_addValueChangeListener('puppetGroups', (name, oldVal, newVal) => {
             savedList = JSON.parse(newVal);
             updatePuppetNations(savedList, activeGroup);
         });
         GM_addValueChangeListener('activeGroup', (name, oldVal, newVal) => {
-            savedList = JSON.parse(newVal);
-            updatePuppetNations(savedList, activeGroup);
+            updatePuppetNations(savedList, newVal);
         });
         navDiv.appendChild(prevBtn);
         navDiv.appendChild(groupSelect);
