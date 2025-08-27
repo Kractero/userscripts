@@ -8,23 +8,8 @@
 // ==/UserScript==
 (function () {
     'use strict';
-    if (!document.getElementById('page_login')) window.close()
-    const url = new URL(window.location.href)
-    const searchParams = url.searchParams
-    const separator = url.searchParams.toString() ? '&' : '?'
-
-    const regex = /(?:container=([^/]+)|nation=([^/]+))/
-    const match = url.pathname.match(regex)
-
-    const nation = match ? match[1] || match[2] : null
-
-    if (document.querySelector('#loggedin')) {
-      const loggedNation = document.body.getAttribute('data-nname')
-      if (loggedNation === nation.replaceAll(' ', '_').toLowerCase()) {
-        window.close()
-      }
-    }
-    
+    if (!window.location.href.includes('test=1') && document.referrer.includes('test=1')) window.close()
+    if (!window.location.href.includes('test=1')) return
     let enpass = document.querySelectorAll('input[type="password"]')[1];
     if (enpass) {
         enpass.value = "";
@@ -40,7 +25,10 @@
         if (button) {
             button.focus();
         }
+
+        if (document.querySelector('#loggedin')) {
+          let nation = document.querySelectorAll('input[name="nation"]')[1].value;
+          document.querySelector('#content form').action = `/test=1`
+        }
     }
 })();
-
-
