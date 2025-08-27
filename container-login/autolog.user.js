@@ -1,15 +1,29 @@
 // ==UserScript==
 // @name        Auto Login Helper
-// @namespace   Violentmonkey Scripts
 // @match       https://*.nationstates.net/*test=1*
-// @match       https://*.nationstates.net/
 // @grant       window.close
-// @version     1.1
+// @version     1.2
 // @author      Kractero
 // ==/UserScript==
 (function () {
     'use strict';
     if (!document.getElementById('page_login')) window.close()
+    const url = new URL(window.location.href)
+    const searchParams = url.searchParams
+    const separator = url.searchParams.toString() ? '&' : '?'
+
+    const regex = /(?:container=([^/]+)|nation=([^/]+))/
+    const match = url.pathname.match(regex)
+
+    const nation = match ? match[1] || match[2] : null
+
+    if (document.querySelector('#loggedin')) {
+      const loggedNation = document.body.getAttribute('data-nname')
+      if (loggedNation === nation.replaceAll(' ', '_').toLowerCase()) {
+        window.close()
+      }
+    }
+    
     let enpass = document.querySelectorAll('input[type="password"]')[1];
     if (enpass) {
         enpass.value = "";
@@ -27,3 +41,4 @@
         }
     }
 })();
+
