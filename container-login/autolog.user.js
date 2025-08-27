@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name        Auto Login Helper
 // @match       https://*.nationstates.net/*test=1*
+// @match       https://*.nationstates.net/*nation*
 // @grant       window.close
-// @version     1.2
+// @version     1.3
 // @author      Kractero
 // ==/UserScript==
 (function () {
@@ -41,4 +42,5 @@
         }
     }
 })();
+
 
