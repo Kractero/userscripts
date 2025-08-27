@@ -25,10 +25,15 @@
         if (button) {
             button.focus();
         }
-
+        
         if (document.querySelector('#loggedin')) {
           let nation = document.querySelectorAll('input[name="nation"]')[1].value;
           document.querySelector('#content form').action = `/test=1`
+        } else {
+          if (document.querySelector('b')) return
+          let nation = document.querySelectorAll('input[name="nation"]')[1].value;
+          document.querySelector('#content form').action = `/nation=${nation}?test=1`
         }
     }
 })();
+
