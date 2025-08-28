@@ -78,7 +78,7 @@ function handler() {
       switchNation = true
       // terminate if nation has no issues and has appeared again (if you entered a dupe twice)
       const loggedNation = document.body.getAttribute('data-nname')
-      if (loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) {
+      if (loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) {
         switchNation = false
       }
     }
