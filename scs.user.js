@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.15
+// @version     1.16
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -77,6 +77,7 @@ function handler() {
     if (url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) {
       switchNation = true
       // terminate if nation has no issues and has appeared again (if you entered a dupe twice)
+      const loggedNation = document.body.getAttribute('data-nname')
       if (loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) {
         switchNation = false
       }
