@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.16
+// @version     1.17
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
