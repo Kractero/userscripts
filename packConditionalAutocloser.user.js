@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pack Conditional Autocloser
-// @version      1.2
+// @version      1.3
 // @description  Autoclose packs that don't contain legendaries or cards over certain market value.
 // @author       Kractero
 // @match        https://*.nationstates.net/*page=deck*
@@ -11,6 +11,7 @@
     'use strict';
     let error = document.querySelector(".error")
     if (error) return;
+    if (!document.querySelector('.deck-loot-box')) return;
     const cards = document.querySelectorAll('.deck-loot-box .deckcard-container');
     const legendaries = Array.from(cards).map(card => {
         const season = card.querySelector('.deckcard').getAttribute('data-season')
@@ -39,3 +40,4 @@
         window.close();
     }
 })();
+
