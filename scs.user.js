@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.17
+// @version     1.18
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -74,12 +74,13 @@ function handler() {
     }
     
     // if the url contains gotIssues (for gotIssues) and no issue, switch
-    if (url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) {
+    // or auction with template_none
+    if ((url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) || url.href.includes("Auction")) {
       switchNation = true
-      // terminate if nation has no issues and has appeared again (if you entered a dupe twice)
       const loggedNation = document.body.getAttribute('data-nname')
-      if (loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) {
-        switchNation = false
+      const currentNation = localStorage.getItem("currentNation");
+      if ((loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) || currentNation === nation) {
+        switchNation = false;
       }
     }
     
