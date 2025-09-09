@@ -106,7 +106,6 @@ function handler() {
       notice.id = 'switching'
       notice.style.display = 'none'
       document.body.appendChild(notice)
-      localStorage.setItem("currentNation", nation)
 
       if (document.getElementById('loginbox')) {
         document.querySelector('#loginbox').style.display = 'block'
@@ -124,6 +123,7 @@ function handler() {
             document.querySelector(
               '#loginbox > form'
             ).action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
+            localStorage.setItem("currentNation", nation)
             document.querySelector('#loginbox > form button[name=submit]').click()
             document.removeEventListener('keyup', onKeyUp)
           }
@@ -161,6 +161,7 @@ function handler() {
         document.addEventListener('keyup', function onKeyUp(event) {
           if (event.key === 'Enter') {
             // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
+            localStorage.setItem("currentNation", nation)
             loginForm.action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
             loginForm.submit()
             document.removeEventListener('keyup', onKeyUp)
