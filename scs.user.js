@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.18
+// @version     1.19
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -78,9 +78,9 @@ function handler() {
     if ((url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) || url.href.includes("Auction")) {
       switchNation = true
       const loggedNation = document.body.getAttribute('data-nname')
-      const currentNation = localStorage.getItem("currentNation");
+      const currentNation = localStorage.getItem("currentNation")
       if ((loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) || currentNation === nation) {
-        switchNation = false;
+        switchNation = false
       }
     }
     
@@ -100,6 +100,15 @@ function handler() {
       window.close()
     }
 
+    // If the exploding computer happens the local storage nation may get out of sync before an actual switch happens.
+    // To check this look at the error message that says X nation is not confronted, if it's not the same as the stored nation, switch
+    if (document.querySelector('.error')) {
+      const currentNation = localStorage.getItem("currentNation");
+      if (!document.querySelector('.error').textContent.includes(currentNation)) {
+        switchNation = true
+      }
+    }
+    
     if (switchNation === true) {
       // for query selecting on other scripts
       const notice = document.createElement('div')
