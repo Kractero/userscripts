@@ -100,6 +100,10 @@ function handler() {
       window.close()
     }
 
+    if (searchParams.has('open_loot_box') && !document.body.textContent.includes('You have no unopened packs')) {
+      switchNation = false
+    }
+
     // If the exploding computer happens the local storage nation may get out of sync before an actual switch happens.
     // To check this look at the error message that says X nation is not confronted, if it's not the same as the stored nation, switch
     if (document.querySelector('.error')) {
