@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.20
+// @version     1.21
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -100,7 +100,7 @@ function handler() {
       window.close()
     }
 
-    if (searchParams.has('open_loot_box') && !document.body.textContent.includes('You have no unopened packs')) {
+    if (document.querySelector('#loggedin') && searchParams.has('open_loot_box') && !document.body.textContent.includes('You have no unopened packs')) {
       switchNation = false
     }
 
