@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.21
+// @version     1.22
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -100,8 +100,11 @@ function handler() {
       window.close()
     }
 
-    if (document.querySelector('#loggedin') && searchParams.has('open_loot_box') && !document.body.textContent.includes('You have no unopened packs')) {
+    if (searchParams.has('open_loot_box') && !document.body.textContent.includes('You have no unopened packs')) {
       switchNation = false
+      if (document.querySelector('#loggedout')) {
+        switchNation = true
+      }
     }
 
     // If the exploding computer happens the local storage nation may get out of sync before an actual switch happens.
