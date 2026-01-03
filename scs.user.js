@@ -145,46 +145,34 @@ function handler() {
           }
         })
       } else {
-        const loginForm = document.createElement('form')
-        loginForm.method = 'POST'
+        const nationId = nation.toLowerCase().replace(/ /g, "_");
+        const url = `https://www.nationstates.net/cgi-bin/api.cgi?nation=${nationId}&q=ping`;
 
-        const loggingInInput = document.createElement('input')
-        loggingInInput.name = 'logging_in'
-        loggingInInput.value = '1'
-        loggingInInput.type = 'hidden'
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "User-Agent": `Shitty_Card_Switcher__by_Kractero__usedBy_${ua}`,
+                    "X-Password": resolvedPassword
+                }
+            });
 
-        const nationInput = document.createElement('input')
-        nationInput.name = 'nation'
-        nationInput.value = nation
+            if (!response.ok) {
+                console.log(`[${nation}] login failed (${response.status}).`);
+                return;
+            }
 
-        const passwordInput = document.createElement('input')
-        passwordInput.name = 'password'
-        passwordInput.type = 'password'
-        const resolvedPassword = puppetStruct[nation] || password
-        if (!resolvedPassword) {
-          alert('Set password in the userscript!')
-          return
-        }
-        passwordInput.value = resolvedPassword
+            const pin = response.headers.get("x-pin");
 
-        const submitButton = document.createElement('button')
-        submitButton.type = 'submit'
-        submitButton.value = 'Login'
-        submitButton.textContent = 'Login'
-
-        loginForm.append(loggingInInput, nationInput, passwordInput, submitButton)
-
-        document.addEventListener('keyup', function onKeyUp(event) {
-          if (event.key === 'Enter') {
-            // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
-            localStorage.setItem("currentNation", nation)
-            loginForm.action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
-            loginForm.submit()
-            document.removeEventListener('keyup', onKeyUp)
+            if (pin) {
+                document.cookie = `pin=${pin}; domain=www.nationstates.net; path=/; secure`;
+                window.location.reload();
+            } else {
+                console.log(`[${nation}] login failed (no PIN in header).`);
+            }
+          } catch (error) {
+          console.log(`network error: ${error.message}`);
           }
-        })
-
-        document.body.prepend(loginForm)
       }
     }
   }
