@@ -122,57 +122,39 @@ function handler() {
       notice.id = 'switching'
       notice.style.display = 'none'
       document.body.appendChild(notice)
+      
+      const nationId = nation.toLowerCase().replace(/ /g, "_");
+      const url = `https://www.nationstates.net/cgi-bin/api.cgi?nation=${nationId}&q=ping`;
 
-      if (document.getElementById('loginbox')) {
-        document.querySelector('#loginbox').style.display = 'block'
-        document.querySelector('#loginbox > form input[name=nation]').value = nation
-        const resolvedPassword = puppetStruct[nation] || password
-        if (!resolvedPassword) {
-          alert('Set password in the userscript!')
-          return
-        }
-        document.querySelector('#loginbox > form input[name=password]').value = resolvedPassword
+      try {
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "User-Agent": `Shitty_Card_Switcher__by_Kractero__usedBy_${ua}`,
+                "X-Password": resolvedPassword
+            }
+          });
 
-        document.addEventListener('keyup', function onKeyUp(event) {
-          if (event.key === 'Enter') {
-            // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
-            document.querySelector(
-              '#loginbox > form'
-            ).action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
-            localStorage.setItem("currentNation", nation)
-            document.querySelector('#loginbox > form button[name=submit]').click()
-            document.removeEventListener('keyup', onKeyUp)
+          if (!response.ok) {
+            console.log(`[${nation}] login failed (${response.status}).`);
+            return;
           }
-        })
-      } else {
-        const nationId = nation.toLowerCase().replace(/ /g, "_");
-        const url = `https://www.nationstates.net/cgi-bin/api.cgi?nation=${nationId}&q=ping`;
 
-        try {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "User-Agent": `Shitty_Card_Switcher__by_Kractero__usedBy_${ua}`,
-                    "X-Password": resolvedPassword
-                }
+          const pin = response.headers.get("x-pin");
+
+          if (pin) {
+            document.cookie = `pin=${pin}; domain=www.nationstates.net; path=/; secure`;
+            document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+              window.location.reload();
+            }
             });
-
-            if (!response.ok) {
-                console.log(`[${nation}] login failed (${response.status}).`);
-                return;
-            }
-
-            const pin = response.headers.get("x-pin");
-
-            if (pin) {
-                document.cookie = `pin=${pin}; domain=www.nationstates.net; path=/; secure`;
-                window.location.reload();
-            } else {
-                console.log(`[${nation}] login failed (no PIN in header).`);
-            }
-          } catch (error) {
-          console.log(`network error: ${error.message}`);
+          } else {
+            console.log(`[${nation}] login failed (no PIN in header).`);
           }
+        } catch (error) {
+          console.log(`network error: ${error.message}`);
+        }
       }
     }
   }
