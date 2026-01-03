@@ -43,9 +43,7 @@ const match = url.pathname.match(regex)
 
 const nation = match ? match[1] || match[2] : null
 
-handler()
-
-function handler() {
+async function handler() {
   let switchNation = false
 
   if (url.href.includes('generated_by=Hare')) {
@@ -125,6 +123,7 @@ function handler() {
       
       const nationId = nation.toLowerCase().replace(/ /g, "_");
       const url = `https://www.nationstates.net/cgi-bin/api.cgi?nation=${nationId}&q=ping`;
+      const resolvedPassword = puppetStruct[nation] || password
 
       try {
           const response = await fetch(url, {
@@ -159,7 +158,9 @@ function handler() {
     }
   }
 
-  if (searchParams.has('open_loot_box')) {
-    document.querySelector('.lootboxbutton').focus()
+  if (searchParams.has("open_loot_box") && document.querySelector(".lootboxbutton") !== null) {
+    document.querySelector(".lootboxbutton").focus()
   }
 }
+
+handler()
