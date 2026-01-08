@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.22
+// @version     1.23
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -124,7 +124,7 @@ function handler() {
       document.body.appendChild(notice)
 
       if (document.getElementById('loginbox')) {
-        document.querySelector('#loginbox').style.display = 'block'
+        document.querySelector('#loginbox').classList.add('activeloginbox')
         document.querySelector('#loginbox > form input[name=nation]').value = nation
         const resolvedPassword = puppetStruct[nation] || password
         if (!resolvedPassword) {
@@ -132,6 +132,7 @@ function handler() {
           return
         }
         document.querySelector('#loginbox > form input[name=password]').value = resolvedPassword
+        document.querySelector('#loginbox > form input[name=autologin]').checked = true
 
         document.addEventListener('keyup', function onKeyUp(event) {
           if (event.key === 'Enter') {
@@ -167,12 +168,18 @@ function handler() {
         }
         passwordInput.value = resolvedPassword
 
+        const loggedInInput = document.createElement('input')
+        loggedInInput.name = 'autologin'
+        loggedInInput.value = 'yes'
+        loggedInInput.type = 'checkbox'
+        loggedInInput.checked = true
+        
         const submitButton = document.createElement('button')
         submitButton.type = 'submit'
         submitButton.value = 'Login'
         submitButton.textContent = 'Login'
 
-        loginForm.append(loggingInInput, nationInput, passwordInput, submitButton)
+        loginForm.append(loggingInInput, nationInput, passwordInput, loggedInInput, submitButton)
 
         document.addEventListener('keyup', function onKeyUp(event) {
           if (event.key === 'Enter') {
