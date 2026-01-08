@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Banner Uploader
-// @version      1.2
+// @version      1.3
 // @description  Banner blobbing
 // @author       Kractero
 // @match        https://*.nationstates.net/*page=banners*
@@ -14,7 +14,7 @@
 
     const openDatabase = () => {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open('HareStorage', 2)
+        const request = indexedDB.open('HareStorage', 3)
 
         request.onupgradeneeded = e => {
           const db = e.target.result
@@ -121,14 +121,18 @@
         const fileInput = document.querySelector(`input[name='${id.replace('banner', 'file')}']`)
         fileInput.files = dataTransfer.files
 
-        document.querySelector(`#${id} button[name='uploadbanner']`).focus()
+        const loginBox = document.querySelector("#loginbox")
+        const isActive = loginBox.classList.contains("activeloginbox") || getComputedStyle(loginBox).display === "block"
+        if (!isActive) document.querySelector(`#${id} button[name='uploadbanner']`).focus()
         break
       } else {
         const label = document.querySelector(`label[for='${id}_Primary']`)
         label.click()
         document.querySelector('#savebannersbuttonfloating').style.display = 'block'
         const button = document.querySelector("button[name='make_changes2']")
-        button.focus()
+        const loginBox = document.querySelector("#loginbox")
+        const isActive = loginBox.classList.contains("activeloginbox") || getComputedStyle(loginBox).display === "block"
+        if (!isActive) button.focus()
         break
       }
     }
