@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.23
+// @version     1.24
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -24,7 +24,7 @@ if (puppetsPasswords) {
   puppetsPasswords.split('\n').forEach(combo => {
     const [username, password] = combo.split(',').map(s => s.trim())
     if (username && password) {
-      puppetStruct[username] = password 
+      puppetStruct[username] = password
     }
   })
 }
@@ -63,7 +63,7 @@ function handler() {
     if (document.querySelector('#loggedout')) {
       switchNation = true
     }
-    
+
     // if the nation is logged in (on a non template_none page),
     // but the nation doesn't match the one in the url, switch
     if (document.querySelector('#loggedin')) {
@@ -72,27 +72,33 @@ function handler() {
         switchNation = true
       }
     }
-    
+
     // if the url contains gotIssues (for gotIssues) and no issue, switch
     // or auction with template_none
-    if ((url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) || url.href.includes("Auction")) {
+    if (
+      (url.href.includes('gotIssues') && url.href.includes('dilemma') && !document.querySelector('.dilemmapaper')) ||
+      url.href.includes('Auction')
+    ) {
       switchNation = true
       const loggedNation = document.body.getAttribute('data-nname')
-      const currentNation = localStorage.getItem("currentNation")
+      const currentNation = localStorage.getItem('currentNation')
       if ((loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) || currentNation === nation) {
         switchNation = false
       }
     }
-    
+
     // if the url contains junkdajunk and junk value is zero, there are two reasons:
     // 1) you already junked the card and don't own it anymore
     // 2) you are on the wrong nation
     // Another potential outcome is that you aren't logged into any nation, this will result in 'Whoops, you are logged out!'
-    if (url.href.toLowerCase().includes('junkdajunk') && (Number(document.body.textContent) === 0 || document.body.textContent.includes('Whoops'))) {
+    if (
+      url.href.toLowerCase().includes('junkdajunk') &&
+      (Number(document.body.textContent) === 0 || document.body.textContent.includes('Whoops'))
+    ) {
       switchNation = true
       // double checks against the logged nation in local storage
       // if it matches the one in the url, a 0 is assumed to be that you no longer have the card and the page is closed
-      if (localStorage.getItem("currentNation") === nation) {
+      if (localStorage.getItem('currentNation') === nation) {
         window.close()
         return
       }
@@ -110,12 +116,12 @@ function handler() {
     // If the exploding computer happens the local storage nation may get out of sync before an actual switch happens.
     // To check this look at the error message that says X nation is not confronted, if it's not the same as the stored nation, switch
     if (document.querySelector('.error')) {
-      const currentNation = localStorage.getItem("currentNation");
+      const currentNation = localStorage.getItem('currentNation')
       if (!document.querySelector('.error').textContent.includes(currentNation)) {
         switchNation = true
       }
     }
-    
+
     if (switchNation === true) {
       // for query selecting on other scripts
       const notice = document.createElement('div')
@@ -134,18 +140,30 @@ function handler() {
         document.querySelector('#loginbox > form input[name=password]').value = resolvedPassword
         document.querySelector('#loginbox > form input[name=autologin]').checked = true
 
-        document.addEventListener('keyup', function onKeyUp(event) {
-          if (event.key === 'Enter') {
-            // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
-            document.querySelector(
-              '#loginbox > form'
-            ).action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
-            localStorage.setItem("currentNation", nation)
-            document.querySelector('#loginbox > form button[name=submit]').click()
-            document.removeEventListener('keyup', onKeyUp)
-          }
+        const loginbox = document.getElementById('loginbox')
+        document.querySelectorAll('button,input,a').forEach(el => {
+          if (!loginbox.contains(el)) el.disabled = true
         })
+
+        document.addEventListener(
+          'keyup',
+          function onKeyUp(event) {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              event.stopImmediatePropagation()
+              // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
+              document.querySelector(
+                '#loginbox > form'
+              ).action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
+              localStorage.setItem('currentNation', nation)
+              document.querySelector('#loginbox > form button[name=submit]').click()
+              document.removeEventListener('keyup', onKeyUp)
+            }
+          },
+          { capture: true, once: true }
+        )
       } else {
+        document.querySelectorAll('button,input,a').forEach(el => (el.disabled = true))
         const loginForm = document.createElement('form')
         loginForm.method = 'POST'
 
@@ -173,7 +191,7 @@ function handler() {
         loggedInInput.value = 'yes'
         loggedInInput.type = 'checkbox'
         loggedInInput.checked = true
-        
+
         const submitButton = document.createElement('button')
         submitButton.type = 'submit'
         submitButton.value = 'Login'
@@ -181,15 +199,21 @@ function handler() {
 
         loginForm.append(loggingInInput, nationInput, passwordInput, loggedInInput, submitButton)
 
-        document.addEventListener('keyup', function onKeyUp(event) {
-          if (event.key === 'Enter') {
-            // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
-            localStorage.setItem("currentNation", nation)
-            loginForm.action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
-            loginForm.submit()
-            document.removeEventListener('keyup', onKeyUp)
-          }
-        })
+        document.addEventListener(
+          'keyup',
+          function onKeyUp(event) {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              event.stopImmediatePropagation()
+              // set the form action to tell the form to send the login data to the relevant page, this has the benefit of landing back on the right page
+              localStorage.setItem('currentNation', nation)
+              loginForm.action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
+              loginForm.submit()
+              document.removeEventListener('keyup', onKeyUp)
+            }
+          },
+          { capture: true, once: true }
+        )
 
         document.body.prepend(loginForm)
       }
