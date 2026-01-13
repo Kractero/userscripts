@@ -59,9 +59,9 @@ function showSettingsModal() {
   document.getElementById('SCS_submit').addEventListener('click', e => {
     e.preventDefault()
 
-    GM_setValue('SCS_ua', document.getElementById('SCS_ua').value.strip())
-    GM_setValue('SCS_password', document.getElementById('SCS_password').value.strip())
-    GM_setValue('SCS_puppets', document.getElementById('SCS_puppets').value.strip())
+    GM_setValue('SCS_ua', document.getElementById('SCS_ua').value.trim())
+    GM_setValue('SCS_password', document.getElementById('SCS_password').value.trim())
+    GM_setValue('SCS_puppets', document.getElementById('SCS_puppets').value.trim())
 
     window.location.href = window.location.href
   })
@@ -76,20 +76,20 @@ if (puppets) {
 
 if (!ua || !password) {
   showSettingsModal()
+} else {
+  handler()
 }
 
-const url = new URL(window.location.href)
-const searchParams = url.searchParams
-const separator = url.searchParams.toString() ? '&' : '?'
-
-const regex = /(?:container=([^/]+)|nation=([^/]+))/
-const match = url.pathname.match(regex)
-
-const nation = match ? match[1] || match[2] : null
-
-handler()
-
 function handler() {
+  const url = new URL(window.location.href)
+  const searchParams = url.searchParams
+  const separator = url.searchParams.toString() ? '&' : '?'
+
+  const regex = /(?:container=([^/]+)|nation=([^/]+))/
+  const match = url.pathname.match(regex)
+
+  const nation = match ? match[1] || match[2] : null
+
   let switchNation = false
 
   if (url.href.includes('generated_by=Hare')) {
@@ -184,10 +184,6 @@ function handler() {
         document.querySelector('#loginbox').prepend(editButton)
 
         const resolvedPassword = puppetStruct[nation] || password
-        if (!resolvedPassword) {
-          alert('Set password in the userscript!')
-          return
-        }
         document.querySelector('#loginbox > form input[name=password]').value = resolvedPassword
         document.querySelector('#loginbox > form input[name=autologin]').checked = true
 
