@@ -2,7 +2,7 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.24
+// @version     1.25
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -141,8 +141,12 @@ function handler() {
         document.querySelector('#loginbox > form input[name=autologin]').checked = true
 
         const loginbox = document.getElementById('loginbox')
-        document.querySelectorAll('button,input,a').forEach(el => {
-          if (!loginbox.contains(el)) el.disabled = true
+
+        document.querySelectorAll('form input[type="submit"], form button').forEach(el => {
+          if (!loginbox.contains(el)) {
+            el.disabled = true
+            el.classList.add('disabledForSimultaneity')
+          }
         })
 
         document.addEventListener(
@@ -163,7 +167,7 @@ function handler() {
           { capture: true, once: true }
         )
       } else {
-        document.querySelectorAll('button,input,a').forEach(el => (el.disabled = true))
+        document.querySelectorAll('form input[type="submit"], form button').forEach(el => (el.disabled = true))
         const loginForm = document.createElement('form')
         loginForm.method = 'POST'
 
