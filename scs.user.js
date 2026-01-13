@@ -2,36 +2,80 @@
 // @name        Simple Card Switcher
 // @match       https://*.nationstates.net/*generated_by=Hare*
 // @grant       window.close
-// @version     1.25
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @version     1.26
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
 
-const ua = ''
-const password = ''
-
-/*
-  Multi-password: Provide it by replacing the text within the ` with your username,password.
-  You can provide the above password as a fallback.
-*/
-const puppetsPasswords = `
-a,b
-c,d
-`.trim()
-
+let ua = GM_getValue('SCS_ua', '')
+let password = GM_getValue('SCS_password', '')
+let puppets = GM_getValue('SCS_puppets', '')
 let puppetStruct = {}
-if (puppetsPasswords) {
-  puppetsPasswords.split('\n').forEach(combo => {
-    const [username, password] = combo.split(',').map(s => s.trim())
-    if (username && password) {
-      puppetStruct[username] = password
-    }
+
+function showSettingsModal() {
+  // disable everything when this is open
+  document.querySelectorAll('form input[type="submit"], form button').forEach(el => {
+    el.disabled = true
+    el.classList.add('disabledForSimultaneity')
+  })
+
+  // create modal and overlay for the form
+  const overlay = document.createElement('div')
+  overlay.style = `
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; justify-content: center; align-items: center; z-index: 9999;
+  `
+  const modal = document.createElement('div')
+  modal.style = `
+    background: #fff; padding: 2em; border-radius: 12px; max-width: 400px;
+    width: 90%; font-family: sans-serif;
+  `
+
+  // create form with html because using js to do it is terrible
+  modal.innerHTML = `
+    <form target="_top">
+      <p>USER AGENT</p>
+      <p><input id="SCS_ua" name="ua" size="40" value="${ua}"></p>
+      <p>PASSWORD</p>
+      <p><input id="SCS_password" name="password" type="password" size="40" value="${password}"></p>
+      <p>
+        <details>
+          <summary>PUPPETS (user,password per line, optional)</summary>
+          <textarea id="SCS_puppets" rows="5" style="width:100%">${puppets}</textarea>
+        </details>
+      </p>
+      <p>
+        <button id="SCS_submit" class="button icon approve">Save</button>
+      </p>
+    </form>
+  `
+
+  overlay.appendChild(modal)
+  document.body.appendChild(overlay)
+
+  // Strip the inputs and force a reload
+  document.getElementById('SCS_submit').addEventListener('click', e => {
+    e.preventDefault()
+
+    GM_setValue('SCS_ua', document.getElementById('SCS_ua').value.strip())
+    GM_setValue('SCS_password', document.getElementById('SCS_password').value.strip())
+    GM_setValue('SCS_puppets', document.getElementById('SCS_puppets').value.strip())
+
+    window.location.href = window.location.href
   })
 }
 
-if (!ua) {
-  alert('Set UA in the userscript')
-  return
+if (puppets) {
+  puppets.split('\n').forEach(line => {
+    const [user, pw] = line.split(',').map(s => s.trim())
+    if (user && pw) puppetStruct[user] = pw
+  })
+}
+
+if (!ua || !password) {
+  showSettingsModal()
 }
 
 const url = new URL(window.location.href)
@@ -130,8 +174,15 @@ function handler() {
       document.body.appendChild(notice)
 
       if (document.getElementById('loginbox')) {
+        const editButton = document.createElement('button')
+        editButton.classList.add('button')
+        editButton.textContent = 'Edit SCS Credentials'
+        editButton.addEventListener('click', showSettingsModal)
+
         document.querySelector('#loginbox').classList.add('activeloginbox')
         document.querySelector('#loginbox > form input[name=nation]').value = nation
+        document.querySelector('#loginbox').prepend(editButton)
+
         const resolvedPassword = puppetStruct[nation] || password
         if (!resolvedPassword) {
           alert('Set password in the userscript!')
@@ -201,7 +252,12 @@ function handler() {
         submitButton.value = 'Login'
         submitButton.textContent = 'Login'
 
-        loginForm.append(loggingInInput, nationInput, passwordInput, loggedInInput, submitButton)
+        const editButton = document.createElement('button')
+        editButton.classList.add('button')
+        editButton.textContent = 'Edit SCS Credentials'
+        editButton.addEventListener('click', showSettingsModal)
+
+        loginForm.append(loggingInInput, nationInput, passwordInput, loggedInInput, submitButton, editButton)
 
         document.addEventListener(
           'keyup',
