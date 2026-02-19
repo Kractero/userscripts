@@ -126,7 +126,7 @@ function handler() {
       switchNation = true
       const loggedNation = document.body.getAttribute('data-nname')
       const currentNation = localStorage.getItem('currentNation')
-      if ((loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase()) || currentNation === nation) {
+      if ((loggedNation && loggedNation !== nation.replaceAll(' ', '_').toLowerCase() && !url.href.includes('Auction')) || currentNation === nation) {
         switchNation = false
       }
     }
