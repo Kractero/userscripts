@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.26
+// @version     1.27
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
