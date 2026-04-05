@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.27
+// @version     1.28
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -278,5 +278,9 @@ function handler() {
 
   if (searchParams.has('open_loot_box')) {
     document.querySelector('.lootboxbutton').focus()
+  }
+
+  if (document.referrer.includes('close=me')) {
+    window.close()
   }
 }
