@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.28
+// @version     1.29
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -98,8 +98,12 @@ function handler() {
       return
     }
 
-    // terminate on creator
+    // terminate on creator & pinger
     if (window.location.href.includes('Creator')) {
+      return
+    }
+
+    if (window.location.href.includes('Pinger')) {
       return
     }
 
