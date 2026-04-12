@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.29
+// @version     1.30
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -211,7 +211,7 @@ function handler() {
                 '#loginbox > form'
               ).action = `${url}${separator}script=Shitty_Card_Switcher__by_Kractero__usedBy_${ua}&userclick=${Date.now()}`
               localStorage.setItem('currentNation', nation)
-              document.querySelector('#loginbox > form button[name=submit]').click()
+              document.querySelector('#loginbox > form [name=submit]').click()
               document.removeEventListener('keyup', onKeyUp)
             }
           },
@@ -281,7 +281,9 @@ function handler() {
   }
 
   if (searchParams.has('open_loot_box')) {
-    document.querySelector('.lootboxbutton').focus()
+    if (document.querySelector('.lootboxbutton')) {
+      document.querySelector('.lootboxbutton').focus()
+    }
   }
 
   if (document.referrer.includes('close=me')) {
