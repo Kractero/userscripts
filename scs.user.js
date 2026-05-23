@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.30
+// @version     1.31
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -167,9 +167,12 @@ function handler() {
       const currentNation = localStorage.getItem('currentNation')
       if (!document.querySelector('.error').textContent.includes(currentNation)) {
         switchNation = true
+      } else {
+        window.close()
+        return
       }
     }
-
+    
     if (switchNation === true) {
       // for query selecting on other scripts
       const notice = document.createElement('div')
