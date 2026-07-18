@@ -1,0 +1,92 @@
+/* Optional, if supported by the browser */
+@property --legendary-shift {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: #ff4d4d;
+}
+
+/* THE ANIMATION */
+@keyframes legendaryLiquid {
+    0%   { --legendary-shift: #ff4d4d; color: #ff4d4d; }
+    20%  { --legendary-shift: #ffad33; color: #ffad33; }
+    40%  { --legendary-shift: #33ff77; color: #33ff77; }
+    60%  { --legendary-shift: #33adff; color: #33adff; }
+    80%  { --legendary-shift: #ad33ff; color: #ad33ff; }
+    100% { --legendary-shift: #ff4d4d; color: #ff4d4d; }
+}
+
+/* UNIVERSAL SCOPE */
+[class*="legendary"] {
+    animation: legendaryLiquid 8s linear infinite !important;
+    --rarity-main: var(--legendary-shift) !important;
+    --legendary-main: var(--legendary-shift) !important;
+    --legendary-dark: var(--legendary-shift) !important;
+    box-shadow: 0 0 15px var(--legendary-shift) !important;
+    border: none !important;
+}
+
+/* SEASON 4 BODY */
+.deckcard-season-4.legendary .deckcard-stripe {
+    background: var(--legendary-shift) !important;
+    filter: saturate(0.6) brightness(0.8) !important;
+}
+
+/* TITLES */
+.deckcard-season-3.legendary .deckcard-title a,
+.deckcard-season-4.legendary .title,
+[class*="legendary"]:not(.deckcard-season-1):not(.deckcard-season-2) h1.title {
+    animation: legendaryLiquid 8s linear infinite !important;
+    color: var(--legendary-shift) !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: var(--legendary-shift) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,.5) !important;
+    filter: saturate(1.5) brightness(1.2) !important;
+}
+
+/* SEASON 1 & 2 TITLE RESET */
+.deckcard-season-1.legendary .deckcard-title a,
+.deckcard-season-2.legendary .deckcard-title a {
+    animation: none !important;
+    color: #222 !important;
+    -webkit-text-fill-color: #222 !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+/* SEASON 1 BACKGROUND */
+.deckcard-season-1.deckcard-category-legendary .deckcard-info {
+    background-color: var(--legendary-shift) !important;
+    background-image: none !important;
+    filter: saturate(0.7);
+}
+
+/* SEASON 2 BACKGROUND */
+.deckcard-season-2 figure.deckcard-category-legendary {
+    background-color: var(--legendary-shift) !important;
+    background-image: linear-gradient(
+        112deg,
+        rgba(255,255,255,.2) 0%,
+        var(--legendary-shift) 100%
+    ) !important;
+    background-blend-mode: overlay;
+}
+
+/* STRIPES & BANNERS */
+.deckcard-category-legendary .deckcard-stripe,
+.deckcard-category-legendary .deckcard-category,
+.deckcard-season-3 .deckcard-category-legendary .s3-slogan {
+    background: var(--legendary-shift) !important;
+}
+
+/* WHITE METADATA */
+.legendary .rarity-label,
+.legendary .deckcard-season,
+.legendary .deckcard-region,
+.legendary .population-label,
+.legendary .category-label,
+.legendary .deckcard-motto {
+    color: white !important;
+    -webkit-text-fill-color: white !important;
+    text-shadow: 1px 1px 1px black !important;
+}
