@@ -4,7 +4,7 @@
 // @grant       window.close
 // @grant       GM_getValue
 // @grant       GM_setValue
-// @version     1.32
+// @version     1.33
 // @author      Kractero
 // @description Kill me
 // ==/UserScript==
@@ -280,10 +280,21 @@ function handler() {
     }
   }
 
+  // implement merethin suggestion/autoclose unless pack generated
+  // this should stop packs from being eaten
   if (searchParams.has('open_loot_box')) {
-    if (document.querySelector('.lootboxbutton')) {
-      document.querySelector('.lootboxbutton').focus()
-    }
+      if (document.querySelector('.lootboxbutton')) {
+          document.addEventListener("keyup", (ev) => {
+              if (ev.key != "Enter" || ev.repeat) {
+                  ev.preventDefault();
+                  return;
+              }
+              if (document.querySelector('.lootboxbutton').style.display != "none") {
+                  document.querySelector('.lootboxbutton').style.display = "none";
+                  document.querySelector('.lootboxbutton').click();
+              }
+          });
+      }
   }
 
   if (document.referrer.includes('close=me')) {
