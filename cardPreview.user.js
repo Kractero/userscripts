@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         Card Preview
-// @version      1.9
+// @version      1.91
 // @description  Preview cards
 // @author       Kractero
 // @match        https://*.nationstates.net/page=upload_flag
-// @match				 https://*.nationstates.net/page=deck/card=*
 // @grant        none
 // ==/UserScript==
 
