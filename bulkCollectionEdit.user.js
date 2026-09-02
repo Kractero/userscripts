@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        Bulk Collection Edit
-// @version     1.0
+// @version     1.1
 // @match       https://www.nationstates.net/page=deck/collection=*
 // @grant       none
 // @author      Kractero
@@ -10,6 +10,10 @@
 ;(function () {
   'use strict'
 
+  const nation = document.querySelector('#loggedin')
+  if (!nation) {
+    return
+  }
   const form = document.querySelector('form[action*="page=deck/collection="]')
   if (!form) return
 
@@ -67,10 +71,12 @@
     })
     searchParams.set('save_collection', '1')
 
-    const res = await fetch(location.href, {
+    const res = await fetch(`${location.href}&script=BulkCollectionEdit__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`, {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       body: searchParams.toString(),
     })
     if (res.ok) location.reload()
