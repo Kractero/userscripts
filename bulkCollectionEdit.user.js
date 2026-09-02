@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        Bulk Collection Edit
-// @version     1.1
+// @version     1.2
 // @match       https://www.nationstates.net/page=deck/collection=*
 // @grant       none
 // @author      Kractero
@@ -9,13 +9,21 @@
 
 ;(function () {
   'use strict'
-
   const nation = document.querySelector('#loggedin')
-  if (!nation) {
-    return
-  }
+  if (!nation) return
   const form = document.querySelector('form[action*="page=deck/collection="]')
   if (!form) return
+
+  const cap = 250
+  function countTotal() {
+    let total = 0
+    for (const line of textarea.value.trim().split('\n')) {
+      const [id, season, qty] = line.trim().split(',')
+      if (!id || !season) continue
+      total += parseInt(qty, 10) || 1
+    }
+    return total
+  }
 
   const newForm = document.createElement('div')
   newForm.style.cssText = `
@@ -46,19 +54,40 @@
   saveButton.style.cssText = 'height:28px;'
   saveButton.textContent = 'Save'
 
+  const status = document.createElement('span')
+  status.style.cssText = 'margin-left:10px;'
+
   newForm.appendChild(content)
   newForm.appendChild(saveButton)
-
+  newForm.appendChild(status)
   form.parentNode.insertBefore(newForm, form)
 
+  textarea.addEventListener('input', () => {
+    const total = countTotal()
+    if (total > cap) {
+      status.textContent = `Over cap: ${total}/${cap}`
+      status.style.color = 'red'
+      saveButton.disabled = true
+    } else {
+      status.textContent = `${total}/${cap}`
+      status.style.color = ''
+      saveButton.disabled = false
+    }
+  })
+
   saveButton.addEventListener('click', async () => {
+    const total = countTotal()
+    if (total > cap) {
+      status.textContent = `Over cap: ${total}/${cap}`
+      status.style.color = 'red'
+      return
+    }
     const cards = textarea.value
       .trim()
       .split('\n')
       .map(line => line.trim().split(','))
       .filter(([id, season]) => id && season)
       .map(([id, season, qty]) => ({ idseason: `${id}:${season}`, qty: qty || '1' }))
-
     const searchParams = new URLSearchParams()
     searchParams.set('edit', '1')
     searchParams.set('localid', form.querySelector('input[name="localid"]').value)
@@ -70,15 +99,17 @@
       searchParams.set(`selected_${idseason}`, 'on')
     })
     searchParams.set('save_collection', '1')
-
-    const res = await fetch(`${location.href}&script=BulkCollectionEdit__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: searchParams.toString(),
-    })
+    const res = await fetch(
+      `${location.href}&script=BulkCollectionEdit__by_Kractero__usedBy_${nation}&userclick=${Date.now()}`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: searchParams.toString(),
+      }
+    )
     if (res.ok) location.reload()
   })
 })()
