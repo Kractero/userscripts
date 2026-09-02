@@ -1,0 +1,78 @@
+// ==UserScript==
+// @name        Bulk Collection Edit
+// @version     1.0
+// @match       https://www.nationstates.net/page=deck/collection=*
+// @grant       none
+// @author      Kractero
+// @description Add a form to add multiple cards into a collection at once
+// ==/UserScript==
+
+;(function () {
+  'use strict'
+
+  const form = document.querySelector('form[action*="page=deck/collection="]')
+  if (!form) return
+
+  const newForm = document.createElement('div')
+  newForm.style.cssText = `
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+  `
+
+  const content = document.createElement('div')
+  content.style.cssText = `
+    display:flex;
+    flex-direction:column;
+  `
+
+  const label = document.createElement('label')
+  label.textContent = 'Enter cards as cardid,season, quantity (optional, default is 1)'
+
+  const textarea = document.createElement('textarea')
+  textarea.rows = 8
+  textarea.cols = 40
+  textarea.style.cssText = 'margin-top:10px;'
+
+  content.appendChild(label)
+  content.appendChild(textarea)
+
+  const saveButton = document.createElement('button')
+  saveButton.classList.add('button')
+  saveButton.style.cssText = 'height:28px;'
+  saveButton.textContent = 'Save'
+
+  newForm.appendChild(content)
+  newForm.appendChild(saveButton)
+
+  form.parentNode.insertBefore(newForm, form)
+
+  saveButton.addEventListener('click', async () => {
+    const cards = textarea.value
+      .trim()
+      .split('\n')
+      .map(line => line.trim().split(','))
+      .filter(([id, season]) => id && season)
+      .map(([id, season, qty]) => ({ idseason: `${id}:${season}`, qty: qty || '1' }))
+
+    const searchParams = new URLSearchParams()
+    searchParams.set('edit', '1')
+    searchParams.set('localid', form.querySelector('input[name="localid"]').value)
+    searchParams.set('start', '0')
+    searchParams.set('collection_name', form.querySelector('input[name="collection_name"]').value)
+    searchParams.set('cardslisted', cards.map(card => card.idseason).join(','))
+    cards.forEach(({ idseason, qty }) => {
+      searchParams.set(`collect_${idseason}`, qty)
+      searchParams.set(`selected_${idseason}`, 'on')
+    })
+    searchParams.set('save_collection', '1')
+
+    const res = await fetch(location.href, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: searchParams.toString(),
+    })
+    if (res.ok) location.reload()
+  })
+})()
