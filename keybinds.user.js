@@ -5,7 +5,7 @@
 // @author       Kractero
 // @noframes
 // @match        https://www.nationstates.net/*
-// @require      https://unpkg.com/hotkeys-js/dist/hotkeys.min.js
+// @require      https://unpkg.com/hotkeys-js/dist/hotkeys-js.min.js
 // @grant        window.close
 // ==/UserScript==
 
@@ -37,6 +37,14 @@
 
   hotkeys(`s,num_9`, function (event) {
     event.preventDefault()
+    if (!window.location.href.includes('season')) {
+      if (cards.length > 1) {
+        const url = cards[currentCard].querySelector('.deckcard-info-cardlink a').getAttribute('href')
+        const newTab = window.open(`${url}`, '_blank')
+      } else {
+        cards[currentCard].querySelector('.deckcard-info-cardlink a').click()
+      }
+    }
     document.querySelector('th[data-mode="sell"').click()
     if (ask_match && ask_match > 0) {
       document.querySelector('input.auctionbid[name="auction_ask"]').value = ask_match
@@ -190,11 +198,13 @@
       if (rarity === 'epic') document.querySelector('input[name="entity_name"').value = 'TB Type L'
       if (rarity === 'ultra-rare') document.querySelector('input[name="entity_name"').value = 'TB Type S'
       if (rarity === 'rare') document.querySelector('input[name="entity_name"').value = 'TB Type A'
-      if (rarity === 'uncommon') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
-      if (rarity === 'common') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
+      if (rarity === 'uncommon') document.querySelector('input[name="entity_name"').value = 'Qingque'
+      if (rarity === 'common') document.querySelector('input[name="entity_name"').value = 'Qingque'
+      if (rarity === 'common') document.querySelector('input[name="entity_name"').value = 'Qingque'
       if (generalRegionWhitelist.includes(region))
         document.querySelector('input[name="entity_name"').value = 'Genius Society'
-      if (rarity === 'common') document.querySelector('input[name="entity_name"').value = 'Moon Jelly'
+      if (Number(document.querySelector('.deckcard-card-stats tr:nth-child(6) > td:nth-child(2)').textContent) > 10)
+        document.querySelector('input[name="entity_name"').value = 'Qingque'
       if (region === 'Herta Space Station') document.querySelector('input[name="entity_name"').value = 'Kractero'
       if (rarity === 'legendary') document.querySelector('input[name="entity_name"').value = 'Kractero'
       document.getElementsByName('send_gift')[0].focus()
@@ -205,8 +215,8 @@
     event.preventDefault()
     if (window.location.href.includes('deck')) {
       if (cards.length > 1) {
-        const url = cards[currentCard].getAttribute('href')
-        const newTab = window.open(url, '_blank')
+        const url = cards[currentCard].querySelector('.deckcard-info-cardlink a').getAttribute('href')
+        const newTab = window.open(`${url}/gift=1`, '_blank')
       } else {
         cards[currentCard].querySelector('.deckcard-info-cardbuttons :not(.deckcard-junk-button)').click()
       }
