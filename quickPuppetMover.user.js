@@ -6,7 +6,7 @@
 // @author       Kractero
 // @match        https://*.nationstates.net/*
 // @exclude      https://*.nationstates.net/page=deck/card=*
-// @require      https://unpkg.com/hotkeys-js/dist/hotkeys.min.js
+// @require      https://unpkg.com/hotkeys-js/dist/hotkeys-js.min.js
 // @downloadUrl  https://github.com/Kractero/ns-stuff/raw/master/quickPuppetMover.user.js
 // ==/UserScript==
 
