@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Card Keybinds
-// @version      1.2
+// @version      1.3
 // @description  Keybinds using hotkeys-js
 // @author       Kractero
 // @noframes
 // @match        https://www.nationstates.net/*
 // @require      https://unpkg.com/hotkeys-js/dist/hotkeys-js.min.js
+// @grant        unsafeWindow
 // @grant        window.close
 // ==/UserScript==
 
@@ -37,7 +38,9 @@
 
   hotkeys(`s,num_9`, function (event) {
     event.preventDefault()
+    if (event.repeat) return
     if (!window.location.href.includes('season')) {
+      // This has been fucked forever, fix later
       if (cards.length > 1) {
         const url = cards[currentCard].querySelector('.deckcard-info-cardlink a').getAttribute('href')
         const newTab = window.open(`${url}`, '_blank')
@@ -49,7 +52,7 @@
     if (ask_match && ask_match > 0) {
       document.querySelector('input.auctionbid[name="auction_ask"]').value = ask_match
     }
-    const askbox = document.querySelector('input.auctionbid[name="auction_ask"]')
+    const askbox = document.querySelector('.mode-sell button')
     askbox.focus()
     askbox.select()
   })
@@ -79,6 +82,8 @@
 
   hotkeys(`y`, function (event) {
     event.preventDefault()
+    if (event.repeat) return
+    if (document.querySelector('.disabledForSimultaneity')) return
     const stuff = document.querySelectorAll('.cardauctionunmatchedrow-ask .cardprice')
     if (stuff.length === 0) return
     for (let i = 0; i < stuff.length; i++) {
@@ -86,11 +91,17 @@
     }
     if (document.querySelector('button[name=remove_ask_price]')) {
       document.querySelector('button[name=remove_ask_price]').click()
+      document.querySelectorAll('form input[type="submit"], form button').forEach(b => {
+        b.disabled = true
+        b.classList.add('disabledForSimultaneity')
+      })
     }
   })
 
   hotkeys(`u`, function (event) {
     event.preventDefault()
+    if (event.repeat) return
+    if (document.querySelector('.disabledForSimultaneity')) return
     const stuff = document.querySelectorAll('.cardauctionunmatchedrow-bid .cardprice')
     if (stuff.length === 0) return
     for (let i = 0; i < stuff.length; i++) {
@@ -98,6 +109,10 @@
     }
     if (document.querySelector('button[name=remove_bid_price]')) {
       document.querySelector('button[name=remove_bid_price]').click()
+      document.querySelectorAll('form input[type="submit"], form button').forEach(b => {
+        b.disabled = true
+        b.classList.add('disabledForSimultaneity')
+      })
     }
   })
 
@@ -127,10 +142,10 @@
 
   let currentCard = 0
   const giftButtons = document.querySelectorAll('.deckcard-info-cardbuttons :not(.deckcard-junk-button)')
-  cards[currentCard].style.border = 'thick solid #FFFFFF'
+  cards[currentCard].style.border = 'thick solid #32006e'
   const highlightCurrentCard = () => {
     cards.forEach(junk => (junk.style.border = ''))
-    cards[currentCard].style.border = 'thick solid #FFFFFF'
+    cards[currentCard].style.border = 'thick solid #32006e'
     cards[currentCard].scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
   }
 
@@ -153,10 +168,26 @@
 
   hotkeys(`j,num_5,down`, function (event) {
     event.preventDefault()
+    if (event.repeat) return
+    if (document.querySelector('.disabledForSimultaneity')) return
     if (!window.location.href.includes('card')) {
       let junkButton = cards[currentCard].querySelector('.deckcard-junk-button')
       if (junkButton) {
+        const $ = unsafeWindow.$
+        const onDone = function (e, xhr, settings) {
+          if (!settings.url.includes('a=junkcard')) return
+          $(unsafeWindow.document).off('ajaxComplete', onDone)
+          document.querySelectorAll('.disabledForSimultaneity').forEach(b => {
+            b.disabled = false
+            b.classList.remove('disabledForSimultaneity')
+          })
+        }
+        $(unsafeWindow.document).on('ajaxComplete', onDone)
         junkButton.click()
+        document.querySelectorAll('form input[type="submit"], form button, .deckcard-junk-button').forEach(b => {
+          b.disabled = true
+          b.classList.add('disabledForSimultaneity')
+        })
         cards[currentCard].style.border = ''
         cards.splice(currentCard, 1)
 
@@ -213,6 +244,7 @@
 
   hotkeys(`g,num_8,up`, function (event) {
     event.preventDefault()
+    if (event.repeat) return
     if (window.location.href.includes('deck')) {
       if (cards.length > 1) {
         const url = cards[currentCard].querySelector('.deckcard-info-cardlink a').getAttribute('href')
@@ -221,6 +253,12 @@
         cards[currentCard].querySelector('.deckcard-info-cardbuttons :not(.deckcard-junk-button)').click()
       }
     }
+  })
+
+  hotkeys(`num_add`, function (event) {
+    event.preventDefault()
+    if (event.repeat) return
+    window.location.href = 'https://www.nationstates.net/page=deck'
   })
 
   hotkeys(`num_subtract`, function (event) {
