@@ -26,12 +26,16 @@
     }
 
     if (window.location.href.includes('region') && document.querySelector('button[name="move_region"]')) {
-      document.querySelector('.danger').click()
+      const dangerButton = document.querySelector('.danger')
+      dangerButton.click()
+      dangerButton.disabled = true
     }
 
     if (window.location.href.includes('region') && document.querySelector("#content input[type='password']")) {
       document.querySelector("#content input[type='password']").value = regionalPassword
-      document.querySelector("#content input[type='submit']").click()
+      const dangerButton = document.querySelector("#content input[type='submit']")
+      dangerButton.click()
+      dangerButton.disabled = true
     }
   })
 
@@ -64,7 +68,9 @@
     if (!window.location.href.includes('page=un')) {
       window.location.href = 'https://www.nationstates.net/page=un'
     } else {
-      document.querySelector('#content form button').click()
+      const waButton = document.querySelector('#content form button')
+      waButton.click()
+      waButton.disabled = true
     }
   })
 })()

@@ -9,8 +9,9 @@
 
 ;(function () {
   'use strict'
-  const nation = document.querySelector('#loggedin')
-  if (!nation) return
+  const nationEl = document.querySelector('#loggedin')
+  if (!nationEl) return
+  const nation = nationEl.getAttribute('data-nname')
   const form = document.querySelector('form[action*="page=deck/collection="]')
   if (!form) return
 
